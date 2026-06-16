@@ -1,79 +1,93 @@
 # ThoughtCapture
 
-A macOS menubar app for zero-friction thought capture. Press **Option+T** anywhere to jot down an idea, ask AI a question, or annotate what you're reading. Everything saves to your Obsidian vault or Apple Notes.
+A macOS menubar app for capturing thoughts with zero friction. Press **Option+T** anywhere to jot down an idea — it saves instantly to your Obsidian vault or Apple Notes.
 
-## Features
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-macOS%2012%2B-blue" />
+  <img src="https://img.shields.io/badge/swift-single%20file-orange" />
+  <img src="https://img.shields.io/badge/license-MIT-green" />
+</p>
 
-- **Instant capture** - Option+T opens a floating input anywhere on screen
-- **Context-aware** - automatically grabs selected text and current app/URL
-- **AI questions** - prefix with `/` to ask AI (uses any OpenAI-compatible API)
-- **Screenshot + comment** - Option+R to capture a screen region and annotate it
-- **Floating bubble** - persistent orb shows your thought history on hover
-- **Paper reading** - `/pr` generates structured paper notes from arXiv URLs
+## What it does
 
-## Quick Start
+- **Option+T** opens a floating panel — type your thought, hit Enter, done
+- **Select any text** in any app — a toolbar appears to save it with one click
+- **Option+R** captures a screenshot region with your annotation
+- A floating bubble shows your recent thoughts on hover — click to jump back to them
+- Everything is saved with timestamps, source app, and URL context
 
-### 1. Configure
+## Install
 
-```bash
-cp .env.example .env
-# Edit .env with your settings:
-#   VAULT_PATH  - path to your Obsidian vault
-#   VAULT_NAME  - vault name (as shown in Obsidian sidebar)
-#   LLM_API_KEY - your API key (DeepSeek, OpenAI, etc.)
-```
+### Option A: Download (recommended)
 
-**Don't use Obsidian?** Set `STORAGE_BACKEND=notes` to save to Apple Notes instead.
+1. Download `ThoughtCapture.zip` from [Releases](../../releases)
+2. Unzip and drag `ThoughtCapture.app` to `/Applications`
+3. Open it — grant **Accessibility** permission when prompted
+4. Click the menubar icon to configure your Obsidian vault path
 
-### 2. Start the server
-
-```bash
-python3 server.py
-```
-
-### 3. Build and run the app
+### Option B: Build from source
 
 ```bash
-# First time: create the app bundle
-mkdir -p /Applications/ThoughtCapture.app/Contents/MacOS
-cp Info.plist /Applications/ThoughtCapture.app/Contents/
+# Requires Xcode Command Line Tools
+xcode-select --install
 
-# Build and deploy
+# Clone and build
+git clone https://github.com/YOUR_USERNAME/thought-capture.git
+cd thought-capture
+./build.sh
+
+# Deploy to /Applications
 ./deploy.sh
 ```
 
-### 4. Grant permissions
+### Permissions
 
-On first launch, go to **System Preferences > Security & Privacy > Privacy > Accessibility** and add ThoughtCapture.app. This enables selected text capture.
+On first launch, macOS will ask for:
+
+- **Accessibility** — needed to read selected text from other apps
+- **Automation (Notes)** — only if you choose Apple Notes as storage
+
+Go to **System Settings > Privacy & Security > Accessibility** and add ThoughtCapture.
 
 ## Usage
 
 | Shortcut | Action |
 |----------|--------|
-| **Option+T** | Open capture panel |
-| **Option+R** | Screenshot + comment |
-| **Enter** | Save thought |
-| **/question** | Ask AI |
-| **/pr** | Read paper at current URL |
-| **/plan** | Generate daily plan |
-| **Esc** | Close panel |
+| **Option+T** | Capture a thought |
+| **Option+R** | Screenshot + annotate |
+| **Enter** | Save |
+| **Esc** | Cancel |
+
+### Storage
+
+Choose between **Obsidian** or **Apple Notes** in Settings (click the menubar icon).
+
+**Obsidian**: Thoughts are appended to a daily file in your vault at `01_daily/YYYY-MM-DD/Daily random thoughts.md` using callout blocks with color-coded timestamps.
+
+**Apple Notes**: Thoughts are appended to a daily note called "Random Thoughts YYYY-MM-DD". Copied text appears in *italic* to distinguish it from your own words.
+
+### Text selection
+
+Select text in any app — a small toolbar appears near your cursor. Click the capture button to save the selection along with source context (app name, URL if in a browser).
+
+## How it works
+
+```
+Option+T  -->  Swift app (single file, ~1700 lines)  -->  Obsidian vault / Apple Notes
+                  |                                              |
+                  |-- floating capture panel                     |-- daily markdown file
+                  |-- selection toolbar (AX API)                 |-- callout blocks with timestamps
+                  |-- screenshot capture                         |-- source attribution
+                  |-- floating bubble + history
+```
+
+No server, no dependencies, no internet connection needed. Just a single Swift file compiled into a native macOS app.
 
 ## Requirements
 
-- macOS 12+
-- Python 3.8+
-- Xcode Command Line Tools (`xcode-select --install`)
-- Obsidian (optional - can use Apple Notes instead)
-- An OpenAI-compatible API key (optional - needed for AI features)
-
-## Architecture
-
-```
-Option+T  -->  Swift menubar app  -->  HTTP POST  -->  Python server  -->  Obsidian / Notes
-                (ThoughtCapture)       localhost:19876   (server.py)        (your vault)
-```
-
-The Swift app handles the UI (floating panel, bubble, hotkeys). The Python server handles routing, LLM calls, and file storage. They communicate over localhost HTTP.
+- macOS 12+ (Monterey or later)
+- Xcode Command Line Tools (for building from source)
+- Obsidian (optional — Apple Notes works too)
 
 ## License
 

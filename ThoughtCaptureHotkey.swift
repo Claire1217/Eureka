@@ -8,7 +8,6 @@ import Carbon
 let HOTKEY_KEYCODE: UInt32 = 17          // 'T' key
 let HOTKEY_SCREENSHOT: UInt32 = 15       // 'R' key
 let HOTKEY_MODIFIERS: UInt32 = UInt32(optionKey)  // Option (⌥)
-let SERVER = "http://127.0.0.1:19876"
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MARK: - Local Storage (no server needed)
@@ -485,122 +484,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
-    // MARK: Send to Server
+    // MARK: Save Thought
 
     func sendToServer(thought: String, selectedText: String,
                       appName: String, windowTitle: String, browserURL: String,
                       editable: Bool = false, screenshotPath: String? = nil) {
-        let url = browserURL.isEmpty ? "app://\(appName)" : browserURL
-        // Get the NEXT colorIndex (the one that will be used after intensify)
-        let bubble = resultBubble?.dotWin.contentView as? ThoughtBubbleView
-        let nextColorIdx = ((bubble?.colorIdx ?? 0) + 1) % 8
-        var payload: [String: Any?] = [
-            "input": thought,
-            "selectedText": selectedText.isEmpty ? nil : selectedText,
-            "url": url,
-            "title": windowTitle.isEmpty ? appName : windowTitle,
-            "source": "global",
-            "app": appName,
-            "editable": editable,
-            "colorIndex": nextColorIdx,
-        ]
-        // Attach screenshot as base64
-        if let path = screenshotPath,
-           let data = FileManager.default.contents(atPath: path) {
-            payload["screenshot"] = data.base64EncodedString()
-            // Clean up temp file
-            try? FileManager.default.removeItem(atPath: path)
+        // Strip "/" prefix — lite version treats all input as thought
+        var cleanThought = thought
+        if cleanThought.hasPrefix("/") || cleanThought.hasPrefix("／") {
+            cleanThought = String(cleanThought.dropFirst()).trimmingCharacters(in: .whitespaces)
         }
-        guard let body = try? JSONSerialization.data(
-            withJSONObject: payload.compactMapValues { $0 }) else { return }
+        if cleanThought.isEmpty && selectedText.isEmpty { return }
 
-        if let debugStr = String(data: body, encoding: .utf8) {
-            fputs("[TC] payload: \(debugStr.prefix(200))\n", stderr)
-        }
+        let result = LocalStorage.shared.save(
+            thought: cleanThought, selectedText: selectedText,
+            appName: appName, browserURL: browserURL,
+            screenshotPath: screenshotPath)
 
-        var req = URLRequest(url: URL(string: "\(SERVER)/handle")!)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.httpBody = body
-
-        URLSession.shared.dataTask(with: req) { [weak self] data, resp, err in
-            DispatchQueue.main.async {
-                fputs("[TC] response: err=\(err?.localizedDescription ?? "nil") dataLen=\(data?.count ?? 0)\n", stderr)
-                if let data = data,
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    let respType = json["type"] as? String ?? ""
-                    fputs("[TC] respType=\(respType) panelAlive=\(self?.capturePanel?.isOpen ?? false)\n", stderr)
-                    if respType == "edit" {
-                        self?.capturePanel?.close()
-                        self?.resultBubble?.playSuccessFeedback()
-                    } else if respType == "question" {
-                        if let taskId = json["taskId"] as? String {
-                            self?.pollQuestionAnswer(taskId)
-                        }
-                    } else if respType == "polish" {
-                        self?.capturePanel?.close()
-                        self?.resultBubble?.prevAppBundleId = self?.prevAppBundleId
-                        let msg = json["message"] as? String ?? "working..."
-                        self?.resultBubble?.setWorkingTask(msg)
-                        if let taskId = json["taskId"] as? String {
-                            self?.resultBubble?.pollTask(taskId, type: respType)
-                        }
-                    } else if respType == "task" || respType == "plan" || respType == "command" {
-                        self?.capturePanel?.close()
-                        let msg = json["message"] as? String ?? "working..."
-                        self?.resultBubble?.setWorkingTask(msg)
-                        if let taskId = json["taskId"] as? String {
-                            self?.resultBubble?.pollTask(taskId)
-                        }
-                    } else {
-                        self?.capturePanel?.close()
-                        let savedTo = json["savedTo"] as? String ?? ""
-                        self?.resultBubble?.addItem(text: thought, savedTo: savedTo, ok: true)
-                    }
-                } else {
-                    // Server unreachable — save locally
-                    fputs("[TC] server down, saving locally\n", stderr)
-                    let result = LocalStorage.shared.save(
-                        thought: thought, selectedText: selectedText,
-                        appName: appName, browserURL: browserURL,
-                        screenshotPath: screenshotPath)
-                    self?.capturePanel?.close()
-                    self?.resultBubble?.addItem(text: thought, savedTo: result.savedTo, ok: result.ok)
-                }
-            }
-        }.resume()
-    }
-    // MARK: Question Answer Polling
-
-    private var questionTimer: Timer?
-
-    func pollQuestionAnswer(_ taskId: String) {
-        fputs("[TC] pollQuestionAnswer: taskId=\(taskId)\n", stderr)
-        questionTimer?.invalidate()
-        questionTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: true) { [weak self] timer in
-            guard let url = URL(string: "\(SERVER)/tasks") else { return }
-            URLSession.shared.dataTask(with: url) { data, _, _ in
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let tasks = json["tasks"] as? [[String: Any]] else { return }
-                let task = tasks.first { ($0["id"] as? String) == taskId }
-                let status = task?["status"] as? String ?? "running"
-                fputs("[TC] poll \(taskId): status=\(status)\n", stderr)
-                if status != "running" {
-                    DispatchQueue.main.async {
-                        timer.invalidate()
-                        self?.questionTimer = nil
-                        fputs("[TC] poll done, panelAlive=\(self?.capturePanel?.isOpen ?? false)\n", stderr)
-                        if status == "done", let answer = task?["answer"] as? String {
-                            self?.capturePanel?.showAnswer(answer)
-                            self?.resultBubble?.playSuccessFeedback()
-                        } else {
-                            self?.capturePanel?.showAnswer("(failed)")
-                        }
-                    }
-                }
-            }.resume()
-        }
+        capturePanel?.close()
+        resultBubble?.addItem(text: cleanThought, savedTo: result.savedTo, ok: result.ok)
     }
 }
 
@@ -655,7 +557,6 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
     private var screenshotView: NSImageView?
     private var anchorY: CGFloat = 0
     private var isAIMode = false
-    private var answerPhase = false  // true during showWorking/showAnswer — blocks resizeToFit
     private var topRegionH: CGFloat = 10
 
     func show(selectedText: String, anchorPoint: NSPoint,
@@ -826,57 +727,10 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         guard !updatingStyle else { return }
         DispatchQueue.main.async { [weak self] in
             self?.resizeToFit()
-            self?.updateAIMode()
-        }
-    }
-
-    private let aiColor = NSColor(red: 0.55, green: 0.36, blue: 0.85, alpha: 1)
-
-    private func updateAIMode() {
-        guard let tv = textView, let c = card else { return }
-        let wantsAI = tv.string.hasPrefix("/") || tv.string.hasPrefix("／")
-        if wantsAI != isAIMode {
-            isAIMode = wantsAI
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.2
-                if wantsAI {
-                    c.layer?.borderWidth = 1.5
-                    c.layer?.borderColor = aiColor.withAlphaComponent(0.35).cgColor
-                    c.layer?.shadowColor = aiColor.cgColor
-                    c.layer?.shadowOpacity = 0.15
-                    c.layer?.shadowRadius = 12
-                } else {
-                    c.layer?.borderWidth = 0
-                    c.layer?.shadowColor = NSColor.black.cgColor
-                    c.layer?.shadowOpacity = 0.10
-                    c.layer?.shadowRadius = 16
-                }
-            }
-            hintLabel?.stringValue = wantsAI
-                ? "\u{21B5} ask AI \u{00B7} esc"
-                : "\u{21B5} save \u{00B7} esc close"
-        }
-
-        if wantsAI && tv.string.count >= 1 {
-            updatingStyle = true
-            let full = tv.textStorage!
-            let range = NSRange(location: 0, length: full.length)
-            full.addAttribute(.font, value: NSFont.systemFont(ofSize: 13), range: range)
-            full.addAttribute(.foregroundColor, value: TC.sub, range: range)
-            // "/" — larger, bold, purple, with trailing space
-            let slashRange = NSRange(location: 0, length: 1)
-            full.addAttribute(.font, value: NSFont.systemFont(ofSize: 13, weight: .bold), range: slashRange)
-            full.addAttribute(.foregroundColor, value: aiColor, range: slashRange)
-            full.addAttribute(.kern, value: 3, range: slashRange)
-            updatingStyle = false
         }
     }
 
     private func resizeToFit() {
-        if answerPhase {
-            fputs("[TC] resizeToFit BLOCKED (answerPhase)\n", stderr)
-            return
-        }
         guard let tv = textView, let sv = scrollView,
               let p = panel, let c = card else { return }
 
@@ -915,15 +769,10 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
     private func submit() {
         let typed = textView?.string
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        // If empty but has quoted selected text, save the selected text as thought
         let text = typed.isEmpty ? quotedText : typed
         guard !text.isEmpty else { close(); return }
         fputs("[TC] submit: \(text)\n", stderr)
-        if text.hasPrefix("/") || text.hasPrefix("／") {
-            showWorking()
-        } else {
-            close()
-        }
+        close()
         if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
         onSubmit?(text)
     }
@@ -932,25 +781,13 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
 
     func close() {
         fputs("[TC] CapturePanel.close()\n", stderr)
-        dotsTimer?.invalidate(); dotsTimer = nil
-        streamTimer?.invalidate(); streamTimer = nil
         panel?.close(); panel = nil
         screenshotView = nil
         ctxBoxView = nil
-        questionLabel = nil
         isAIMode = false
-        answerPhase = false
-        submittedQuestion = ""
         if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }
         if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
     }
-
-    // MARK: Answer Display
-
-    private var questionLabel: NSTextField?
-    private var dotsTimer: Timer?
-    private var streamTimer: Timer?
-    private var submittedQuestion: String = ""
 
     // Quote offset from top — set once in show(), never changes
     private var quoteOffsetFromTop: CGFloat = 0
@@ -964,169 +801,6 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
             quoteLabel?.font = NSFont.systemFont(ofSize: 11)
             quoteLabel?.frame = NSMakeRect(20, ctxY + 2, pw - 40, 14)
         }
-    }
-
-    func showWorking() {
-        guard let p = panel, let c = card, let tv = textView, let sv = scrollView else { return }
-
-        answerPhase = true
-        submittedQuestion = tv.string
-        tv.textStorage?.setAttributedString(NSAttributedString(string: ""))
-        if let ph = c.viewWithTag(999) { ph.isHidden = true }
-        questionLabel?.removeFromSuperview()
-        screenshotView?.isHidden = true
-
-        let ql = NSTextField(labelWithString: "")
-        ql.lineBreakMode = .byTruncatingTail
-        ql.attributedStringValue = Self.styledQuestion(submittedQuestion)
-        c.addSubview(ql, positioned: .above, relativeTo: nil)
-        questionLabel = ql
-
-        // Question goes where input was
-        let qY = sv.frame.origin.y + 2
-        ql.frame = NSMakeRect(16, qY, pw - 32, 16)
-
-        let dotsH: CGFloat = 20
-        let totalH = quoteOffsetFromTop + 16 + 12 + dotsH + 12
-
-        var frame = p.frame
-        let dy = totalH - frame.size.height
-        frame.origin.y -= dy
-        frame.size.height = totalH
-        p.setFrame(frame, display: true)
-        c.frame = NSMakeRect(0, 0, pw, totalH)
-
-        repositionTopElements(totalH)
-        let newQY = totalH - quoteOffsetFromTop - 16 - 12
-        ql.frame = NSMakeRect(16, newQY, pw - 32, 16)
-
-        sv.frame = NSMakeRect(16, 12, pw - 32, dotsH)
-        sv.wantsLayer = true
-        sv.layer?.masksToBounds = true
-        tv.isEditable = false
-        startDotsAnimation(tv)
-        hintLabel?.isHidden = true
-    }
-
-    private func startDotsAnimation(_ tv: NSTextView) {
-        dotsTimer?.invalidate()
-        var tick = 0
-        dotsTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { [weak tv] _ in
-            guard let tv = tv else { return }
-            tick += 1
-            let dots = String(repeating: "·", count: (tick % 3) + 1)
-            let attrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 13, weight: .regular),
-                .foregroundColor: TC.muted
-            ]
-            tv.textStorage?.setAttributedString(NSAttributedString(string: dots, attributes: attrs))
-        }
-    }
-
-    func showAnswer(_ text: String) {
-        dotsTimer?.invalidate(); dotsTimer = nil
-
-        guard let p = panel, let c = card, let tv = textView, let sv = scrollView else { return }
-
-        tv.textStorage?.setAttributedString(NSAttributedString(string: ""))
-
-        c.subviews.filter { $0.identifier?.rawValue == "sep" }.forEach { $0.removeFromSuperview() }
-        let sep = NSView()
-        sep.wantsLayer = true
-        sep.layer?.backgroundColor = TC.rule.cgColor
-        sep.identifier = NSUserInterfaceItemIdentifier("sep")
-        c.addSubview(sep)
-
-        if clickMonitor == nil {
-            clickMonitor = NSEvent.addGlobalMonitorForEvents(
-                matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-                self?.close()
-            }
-        }
-
-        let qOffFromTop = quoteOffsetFromTop + 16 + 12
-        let footerH: CGFloat = 24
-        let maxAnswerH: CGFloat = 200
-
-        let paraStyle = NSMutableParagraphStyle()
-        paraStyle.lineSpacing = 3
-        let answerAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 13),
-            .foregroundColor: TC.body,
-            .paragraphStyle: paraStyle
-        ]
-        let chars = Array(text)
-        var idx = 0
-
-        streamTimer?.invalidate()
-        streamTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) {
-            [weak self, weak tv, weak sv, weak p, weak c] timer in
-            guard let self = self, let tv = tv, let sv = sv, let p = p, let c = c else {
-                timer.invalidate(); return
-            }
-            let chunkSize = max(1, chars.count / 60)
-            let end = min(idx + chunkSize, chars.count)
-            let chunk = String(chars[idx..<end])
-            tv.textStorage?.append(NSAttributedString(string: chunk, attributes: answerAttrs))
-            idx = end
-
-            tv.layoutManager?.ensureLayout(for: tv.textContainer!)
-            let usedRect = tv.layoutManager?.usedRect(for: tv.textContainer!) ?? .zero
-            let answerH = max(18, min(ceil(usedRect.height) + 10, maxAnswerH))
-            let totalH = qOffFromTop + 1 + 6 + answerH + footerH
-
-            var frame = p.frame
-            let dy = totalH - frame.size.height
-            if abs(dy) > 1 {
-                frame.origin.y -= dy
-                frame.size.height = totalH
-                p.setFrame(frame, display: true)
-                c.frame = NSMakeRect(0, 0, self.pw, totalH)
-            }
-
-            self.repositionTopElements(totalH)
-            let qY = totalH - self.quoteOffsetFromTop - 16 - 12
-            self.questionLabel?.frame = NSMakeRect(16, qY, self.pw - 32, 16)
-
-            let sepY = qY - 10
-            c.subviews.first { $0.identifier?.rawValue == "sep" }?.frame =
-                NSMakeRect(16, sepY, self.pw - 32, 0.5)
-
-            sv.frame = NSMakeRect(16, footerH, self.pw - 32, sepY - 6 - footerH)
-            sv.hasVerticalScroller = answerH >= maxAnswerH
-
-            self.hintLabel?.isHidden = false
-            self.hintLabel?.frame = NSMakeRect(self.pw - 70, 2, 60, 12)
-            self.hintLabel?.stringValue = "esc"
-            self.hintLabel?.font = NSFont.systemFont(ofSize: 10)
-            self.hintLabel?.textColor = TC.faint
-
-            tv.scrollToEndOfDocument(nil)
-
-            if idx >= chars.count {
-                timer.invalidate()
-                self.streamTimer = nil
-            }
-        }
-    }
-
-    private static let aiColorStatic = NSColor(red: 0.55, green: 0.36, blue: 0.85, alpha: 1)
-
-    static func styledQuestion(_ text: String) -> NSAttributedString {
-        let base: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 13),
-            .foregroundColor: TC.text
-        ]
-        let result = NSMutableAttributedString(string: text, attributes: base)
-        if text.hasPrefix("/") {
-            let slashAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 13, weight: .bold),
-                .foregroundColor: aiColorStatic,
-                .kern: 2
-            ]
-            result.setAttributes(slashAttrs, range: NSRange(location: 0, length: 1))
-        }
-        return result
     }
 
     static func truncate(_ s: String, max: Int) -> String {
@@ -1258,7 +932,6 @@ class ResultBubble {
 
     private func showPopover() {
         cancelDismiss()
-        fetchPlan()  // async — will rebuild when data arrives
         rebuildPopover()
         positionPopover()
 
@@ -1326,7 +999,7 @@ class ResultBubble {
         }
         settingsTargets.removeAll()
 
-        let W: CGFloat = 380, H: CGFloat = 440
+        let W: CGFloat = 380, H: CGFloat = 240
         let win = NSWindow(contentRect: NSMakeRect(0, 0, W, H),
                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
         win.title = "ThoughtCapture Settings"
@@ -1429,105 +1102,11 @@ class ResultBubble {
         storageSeg.action = #selector(StorageToggle.changed(_:))
         settingsTargets.append(storageToggle)
 
-        sep(at: &y)
-
-        // ━━━  AI  ━━━
-        label("AI ASSISTANT  ·  type / to ask questions", at: &y, size: 11, color: .tertiaryLabelColor)
-
-        // Provider
-        label("Provider", at: &y)
-        let providerSeg = NSSegmentedControl(labels: ["DeepSeek", "OpenAI", "Custom"], trackingMode: .selectOne, target: nil, action: nil)
-        providerSeg.selectedSegment = 0
-        providerSeg.frame = NSMakeRect(px, y - 24, fw, 24)
-        providerSeg.identifier = NSUserInterfaceItemIdentifier("provider")
-        root.addSubview(providerSeg)
-        y -= 36
-
-        // API Key
-        label("API Key", at: &y)
-        let keyField = NSSecureTextField(frame: NSMakeRect(px, y - 22, fw, 22))
-        keyField.placeholderString = "sk-..."
-        keyField.font = .systemFont(ofSize: 12)
-        keyField.identifier = NSUserInterfaceItemIdentifier("llmApiKey")
-        root.addSubview(keyField)
-        y -= 28
-
-        let testStatus = NSTextField(labelWithString: "")
-        testStatus.font = .systemFont(ofSize: 10)
-        testStatus.textColor = .systemGreen
-        testStatus.frame = NSMakeRect(px, y - 14, fw, 14)
-        testStatus.identifier = NSUserInterfaceItemIdentifier("testStatus")
-        root.addSubview(testStatus)
-        y -= 22
-
-        // Custom (hidden)
-        let customRow = NSView(frame: NSMakeRect(px, y - 100, fw, 100))
-        customRow.identifier = NSUserInterfaceItemIdentifier("customRow")
-        customRow.isHidden = true
-        root.addSubview(customRow)
-
-        let elabel = NSTextField(labelWithString: "Endpoint")
-        elabel.font = .systemFont(ofSize: 11)
-        elabel.textColor = .secondaryLabelColor
-        elabel.frame = NSMakeRect(0, 82, fw, 14)
-        customRow.addSubview(elabel)
-
-        let baseField = NSTextField(frame: NSMakeRect(0, 56, fw, 22))
-        baseField.placeholderString = "https://api.example.com/chat/completions"
-        baseField.font = .systemFont(ofSize: 11)
-        baseField.identifier = NSUserInterfaceItemIdentifier("llmApiBase")
-        baseField.bezelStyle = .roundedBezel
-        customRow.addSubview(baseField)
-
-        let mlabel = NSTextField(labelWithString: "Model")
-        mlabel.font = .systemFont(ofSize: 11)
-        mlabel.textColor = .secondaryLabelColor
-        mlabel.frame = NSMakeRect(0, 36, fw, 14)
-        customRow.addSubview(mlabel)
-
-        let modelField = NSTextField(frame: NSMakeRect(0, 10, fw, 22))
-        modelField.placeholderString = "model-name"
-        modelField.font = .systemFont(ofSize: 11)
-        modelField.identifier = NSUserInterfaceItemIdentifier("llmModel")
-        modelField.bezelStyle = .roundedBezel
-        customRow.addSubview(modelField)
-
-        class ProviderToggle: NSObject {
-            weak var customRow: NSView?
-            weak var baseField: NSTextField?
-            weak var modelField: NSTextField?
-            @objc func changed(_ sender: NSSegmentedControl) {
-                let idx = sender.selectedSegment
-                customRow?.isHidden = idx != 2
-                if idx == 0 {
-                    baseField?.stringValue = "https://api.deepseek.com/chat/completions"
-                    modelField?.stringValue = "deepseek-chat"
-                } else if idx == 1 {
-                    baseField?.stringValue = "https://api.openai.com/v1/chat/completions"
-                    modelField?.stringValue = "gpt-4o-mini"
-                }
-            }
-        }
-        let providerToggle = ProviderToggle()
-        providerToggle.customRow = customRow
-        providerToggle.baseField = baseField
-        providerToggle.modelField = modelField
-        providerSeg.target = providerToggle
-        providerSeg.action = #selector(ProviderToggle.changed(_:))
-        settingsTargets.append(providerToggle)
-
         // ━━━  Bottom  ━━━
-        let testBtn = NSButton(title: "Test Connection", target: nil, action: nil)
-        testBtn.bezelStyle = .rounded
-        testBtn.controlSize = .small
-        testBtn.font = .systemFont(ofSize: 11)
-        testBtn.frame = NSMakeRect(px, 14, 116, 22)
-        root.addSubview(testBtn)
-
         let statusLabel = NSTextField(labelWithString: "")
         statusLabel.font = .systemFont(ofSize: 11)
         statusLabel.textColor = .systemGreen
-        statusLabel.frame = NSMakeRect(px + 122, 17, 100, 14)
+        statusLabel.frame = NSMakeRect(px, 17, 200, 14)
         statusLabel.identifier = NSUserInterfaceItemIdentifier("status")
         root.addSubview(statusLabel)
 
@@ -1562,24 +1141,12 @@ class ResultBubble {
                     }
                     return -1
                 }
-                func secureValue(in view: NSView, id: String) -> String {
-                    for sub in view.subviews {
-                        if let sf = sub as? NSSecureTextField, sf.identifier?.rawValue == id { return sf.stringValue }
-                        let v = secureValue(in: sub, id: id)
-                        if !v.isEmpty { return v }
-                    }
-                    return ""
-                }
 
                 let isObsidian = segValue(in: root, id: "storage") == 0
                 let vaultPath = textField(in: root, id: "vaultPath")?.stringValue ?? ""
                 let vaultName = URL(fileURLWithPath: vaultPath).lastPathComponent
-                let apiBase = textField(in: root, id: "llmApiBase")?.stringValue ?? ""
-                let model = textField(in: root, id: "llmModel")?.stringValue ?? ""
-                let apiKey = secureValue(in: root, id: "llmApiKey")
                 let backend = isObsidian ? "obsidian" : "notes"
 
-                // Always save to UserDefaults (works without server)
                 LocalStorage.shared.vaultPath = vaultPath
                 LocalStorage.shared.backend = backend
                 if !vaultName.isEmpty {
@@ -1588,40 +1155,11 @@ class ResultBubble {
                 }
 
                 let status = textField(in: root, id: "status")
-
-                // Also sync to server if running (for LLM features)
-                var payload: [String: Any] = [
-                    "storage": backend,
-                    "vaultPath": vaultPath,
-                    "vaultName": vaultName,
-                    "llmApiBase": apiBase,
-                    "llmModel": model,
-                ]
-                if !apiKey.isEmpty { payload["llmApiKey"] = apiKey }
-
-                guard let url = URL(string: "\(SERVER)/config") else {
-                    status?.textColor = .systemGreen
-                    status?.stringValue = "✓ Saved"
-                    return
+                status?.textColor = .systemGreen
+                status?.stringValue = "✓ Saved"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    status?.stringValue = ""
                 }
-                var req = URLRequest(url: url)
-                req.httpMethod = "POST"
-                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-                req.timeoutInterval = 2
-
-                status?.stringValue = "Saving…"
-                status?.textColor = .secondaryLabelColor
-
-                URLSession.shared.dataTask(with: req) { data, _, err in
-                    DispatchQueue.main.async {
-                        status?.textColor = .systemGreen
-                        status?.stringValue = err != nil ? "✓ Saved (AI offline)" : "✓ Saved"
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            status?.stringValue = ""
-                        }
-                    }
-                }.resume()
             }
         }
         let saveHandler = SaveHandler()
@@ -1630,86 +1168,15 @@ class ResultBubble {
         saveBtn.action = #selector(SaveHandler.save(_:))
         settingsTargets.append(saveHandler)
 
-        // Test connection
-        class TestHandler: NSObject {
-            weak var root: NSView?
-            @objc func test(_ sender: Any) {
-                guard let root = root else { return }
-                func textField(in view: NSView, id: String) -> NSTextField? {
-                    for sub in view.subviews {
-                        if let tf = sub as? NSTextField, tf.identifier?.rawValue == id { return tf }
-                        if let found = textField(in: sub, id: id) { return found }
-                    }
-                    return nil
-                }
-                func secureValue(in view: NSView, id: String) -> String {
-                    for sub in view.subviews {
-                        if let sf = sub as? NSSecureTextField, sf.identifier?.rawValue == id { return sf.stringValue }
-                        let v = secureValue(in: sub, id: id)
-                        if !v.isEmpty { return v }
-                    }
-                    return ""
-                }
-
-                let apiBase = textField(in: root, id: "llmApiBase")?.stringValue ?? ""
-                let model = textField(in: root, id: "llmModel")?.stringValue ?? ""
-                let apiKey = secureValue(in: root, id: "llmApiKey")
-                let statusLabel = textField(in: root, id: "testStatus")
-
-                statusLabel?.textColor = .secondaryLabelColor
-                statusLabel?.stringValue = "Testing…"
-
-                var payload: [String: Any] = ["apiBase": apiBase, "model": model]
-                if !apiKey.isEmpty { payload["apiKey"] = apiKey }
-
-                guard let url = URL(string: "\(SERVER)/config/test-llm") else { return }
-                var req = URLRequest(url: url)
-                req.httpMethod = "POST"
-                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-                URLSession.shared.dataTask(with: req) { data, _, err in
-                    DispatchQueue.main.async {
-                        if let err = err {
-                            statusLabel?.textColor = .systemRed
-                            statusLabel?.stringValue = "Error: \(err.localizedDescription)"
-                            return
-                        }
-                        guard let data = data,
-                              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                            statusLabel?.textColor = .systemRed
-                            statusLabel?.stringValue = "Invalid response"
-                            return
-                        }
-                        if json["ok"] as? Bool == true {
-                            statusLabel?.textColor = .systemGreen
-                            statusLabel?.stringValue = "✓ Connected"
-                        } else {
-                            statusLabel?.textColor = .systemRed
-                            let errMsg = json["error"] as? String ?? "Unknown error"
-                            statusLabel?.stringValue = errMsg.prefix(60).description
-                        }
-                    }
-                }.resume()
-            }
-        }
-        let testHandler = TestHandler()
-        testHandler.root = root
-        testBtn.target = testHandler
-        testBtn.action = #selector(TestHandler.test(_:))
-        settingsTargets.append(testHandler)
-
-        // ── Load current values from server ──
-        loadSettings(root: root, storageSeg: storageSeg,
-                     providerSeg: providerSeg, vaultRow: vaultRow, customRow: customRow)
+        // ── Load current values ──
+        loadSettings(root: root, storageSeg: storageSeg, vaultRow: vaultRow)
 
         settingsWin = win
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func loadSettings(root: NSView,
-                              storageSeg: NSSegmentedControl, providerSeg: NSSegmentedControl,
-                              vaultRow: NSView, customRow: NSView) {
+    private func loadSettings(root: NSView, storageSeg: NSSegmentedControl, vaultRow: NSView) {
         func textField(in view: NSView, id: String) -> NSTextField? {
             for sub in view.subviews {
                 if let tf = sub as? NSTextField, tf.identifier?.rawValue == id { return tf }
@@ -1717,8 +1184,6 @@ class ResultBubble {
             }
             return nil
         }
-
-        // Load from UserDefaults first (always available)
         let storage = LocalStorage.shared.backend
         storageSeg.selectedSegment = storage == "notes" ? 1 : 0
         vaultRow.isHidden = storage == "notes"
@@ -1726,41 +1191,6 @@ class ResultBubble {
         if !savedVaultPath.isEmpty {
             textField(in: root, id: "vaultPath")?.stringValue = savedVaultPath
         }
-
-        // Try to load LLM settings from server (optional)
-        guard let url = URL(string: "\(SERVER)/config") else { return }
-        var req = URLRequest(url: url)
-        req.timeoutInterval = 2
-        URLSession.shared.dataTask(with: req) { data, _, _ in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-            DispatchQueue.main.async {
-
-                // LLM provider detection
-                let apiBase = json["llmApiBase"] as? String ?? ""
-                let model = json["llmModel"] as? String ?? ""
-                textField(in: root, id: "llmApiBase")?.stringValue = apiBase
-                textField(in: root, id: "llmModel")?.stringValue = model
-
-                if apiBase.contains("deepseek") {
-                    providerSeg.selectedSegment = 0
-                    customRow.isHidden = true
-                } else if apiBase.contains("openai") {
-                    providerSeg.selectedSegment = 1
-                    customRow.isHidden = true
-                } else {
-                    providerSeg.selectedSegment = 2
-                    customRow.isHidden = false
-                }
-
-                // API key status
-                let hasLLM = json["hasLLM"] as? Bool ?? false
-                if hasLLM {
-                    textField(in: root, id: "testStatus")?.stringValue = "Key configured ✓"
-                    textField(in: root, id: "testStatus")?.textColor = .systemGreen
-                }
-            }
-        }.resume()
     }
 
     // MARK: Data
@@ -1792,86 +1222,18 @@ class ResultBubble {
 
     // MARK: Popover Layout
 
-    private var planItems: [[String: Any]] = []
-    private var planFilePath: String = ""
-    private var workingTask: String? = nil
-    private var pollTimer: Timer? = nil
-    var prevAppBundleId: String?
-
-    func setWorkingTask(_ label: String) {
-        workingTask = label
-        playSuccessFeedback()
-        if popWin.isVisible { rebuildPopover() }
-    }
-
-    func pollTask(_ taskId: String, type: String = "task") {
-        pollTimer?.invalidate()
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] timer in
-            guard let url = URL(string: "\(SERVER)/tasks") else { return }
-            URLSession.shared.dataTask(with: url) { data, _, _ in
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let tasks = json["tasks"] as? [[String: Any]] else { return }
-                let task = tasks.first { ($0["id"] as? String) == taskId }
-                let status = task?["status"] as? String ?? "running"
-                if status != "running" {
-                    DispatchQueue.main.async {
-                        timer.invalidate()
-                        self?.pollTimer = nil
-                        self?.workingTask = nil
-                        if status == "done" {
-                            if type == "question", let answer = task?["answer"] as? String {
-                                // Show answer in bubble
-                                self?.addItem(text: answer, savedTo: "", ok: true)
-                            } else if type == "polish", let polished = task?["polished"] as? String {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(polished, forType: .string)
-                                self?.pasteBackToApp()
-                                self?.addItem(text: "✓ polished", savedTo: "", ok: true)
-                            } else {
-                                let savedTo = task?["savedTo"] as? String ?? ""
-                                self?.addItem(text: "✓ done", savedTo: savedTo, ok: true)
-                            }
-                        } else {
-                            self?.addItem(text: "✗ failed", savedTo: "", ok: false)
-                        }
-                    }
-                }
-            }.resume()
-        }
-    }
-
-    private func pasteBackToApp() {
-        guard let bundleId = prevAppBundleId else { return }
-        let apps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
-        guard let app = apps.first else { return }
-        app.activate(options: [.activateIgnoringOtherApps])
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            let src = CGEventSource(stateID: .combinedSessionState)
-            let down = CGEvent(keyboardEventSource: src, virtualKey: 0x09, keyDown: true)
-            let up = CGEvent(keyboardEventSource: src, virtualKey: 0x09, keyDown: false)
-            down?.flags = .maskCommand; up?.flags = .maskCommand
-            down?.post(tap: .cgAnnotatedSessionEventTap)
-            up?.post(tap: .cgAnnotatedSessionEventTap)
-        }
-    }
-
     private func rebuildPopover() {
         guard let container = popWin.contentView as? TrackView else { return }
         container.subviews.forEach { $0.removeFromSuperview() }
 
         let rowH: CGFloat = 32
         let pad: CGFloat = 8
-        let sectionGap: CGFloat = 6
 
-        let visiblePlans = Array(planItems.enumerated())
         let visibleThoughts = items
-        let planCount = min(visiblePlans.count, 6)
         let thoughtCount = min(visibleThoughts.count, 8)
-        let hasWorking = workingTask != nil
 
         // Empty state
-        if planCount == 0 && thoughtCount == 0 && !hasWorking {
+        if thoughtCount == 0 {
             let emptyH: CGFloat = 64
             container.frame = NSMakeRect(0, 0, popWidth, emptyH)
             let hint = NSTextField(labelWithString: "Press ⌥T to capture a thought")
@@ -1886,121 +1248,12 @@ class ResultBubble {
 
         // Calculate total height
         var totalH = pad
-        if hasWorking { totalH += 24 }
-        if planCount > 0 {
-            totalH += 18
-            totalH += CGFloat(planCount) * rowH
-            if thoughtCount > 0 { totalH += sectionGap + 1 }
-        }
-        if thoughtCount > 0 {
-            totalH += 18
-            totalH += CGFloat(thoughtCount) * rowH
-        }
+        totalH += 18
+        totalH += CGFloat(thoughtCount) * rowH
         totalH += 8
 
         container.frame = NSMakeRect(0, 0, popWidth, totalH)
         var y = totalH - pad
-
-        // ── Working indicator ──
-        if hasWorking {
-            y -= 20
-            let workLabel = NSTextField(labelWithString: "⏳ \(workingTask ?? "working...")")
-            workLabel.font = rounded(size: 11, weight: .medium)
-            workLabel.textColor = NSColor(red: 0.88, green: 0.55, blue: 0.12, alpha: 1)
-            workLabel.frame = NSMakeRect(10, y, popWidth - 20, 16)
-            container.addSubview(workLabel)
-        }
-
-        // Priority colors for numbers
-        let priorityColors: [String: NSColor] = [
-            "urgent-important": NSColor(red: 0.85, green: 0.22, blue: 0.22, alpha: 1),
-            "urgent":           NSColor(red: 0.88, green: 0.55, blue: 0.12, alpha: 1),
-            "important":        NSColor(red: 0.30, green: 0.50, blue: 0.82, alpha: 1),
-        ]
-
-        // ── Plan Section ──
-        if planCount > 0 {
-            y -= 16
-            let headerRow = ClickableRow(frame: NSMakeRect(4, y, popWidth - 8, 16))
-            let planPath = planFilePath
-            headerRow.onClick = { ResultBubble.openSavedThought(path: planPath) }
-            let header = NSTextField(labelWithString: "TODAY'S PLAN  ↗")
-            header.font = rounded(size: 9, weight: .medium)
-            header.textColor = TC.muted
-            header.frame = NSMakeRect(8, 1, 120, 13)
-            headerRow.addSubview(header)
-            container.addSubview(headerRow)
-
-            for i in 0..<planCount {
-                y -= rowH
-                let (origIdx, plan) = visiblePlans[i]
-                let rawText = plan["text"] as? String ?? ""
-                let done = plan["done"] as? Bool ?? false
-
-                var displayText = rawText
-                var priority = ""
-                for tag in ["#urgent-important", "#urgent", "#important"] {
-                    if displayText.contains(tag) {
-                        priority = tag.replacingOccurrences(of: "#", with: "")
-                        displayText = displayText.replacingOccurrences(of: tag, with: "")
-                    }
-                }
-                if let r = displayText.range(of: #"[（(][^)）]*[)）]\s*$"#, options: .regularExpression) {
-                    displayText = String(displayText[..<r.lowerBound])
-                }
-                displayText = displayText.trimmingCharacters(in: .whitespaces)
-                var indexLabel = "\(i + 1)"
-                if let m = displayText.range(of: #"^[\d]+\.[\d]*\s*"#, options: .regularExpression) {
-                    indexLabel = String(displayText[m]).trimmingCharacters(in: .whitespaces)
-                    if indexLabel.hasSuffix(".") { indexLabel = String(indexLabel.dropLast()) }
-                    displayText = String(displayText[m.upperBound...])
-                }
-
-                let row = ClickableRow(frame: NSMakeRect(4, y, popWidth - 8, rowH))
-                row.wantsLayer = true
-                row.layer?.cornerRadius = 6
-                let toggleIdx = origIdx
-                row.onClick = { [weak self] in self?.togglePlanItem(toggleIdx) }
-
-                // Colored number or ✓
-                let numColor = done ? TC.green : (priorityColors[priority] ?? TC.muted)
-                let num = NSTextField(labelWithString: done ? "✓" : indexLabel)
-                num.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .bold)
-                num.textColor = numColor
-                num.alignment = .center
-                num.frame = NSMakeRect(4, (rowH - 14) / 2, 20, 14)
-                row.addSubview(num)
-
-                // Task text
-                let label = NSTextField(labelWithString: displayText)
-                label.font = rounded(size: 12)
-                label.textColor = done ? TC.faint : TC.text
-                label.lineBreakMode = .byTruncatingTail
-                label.frame = NSMakeRect(26, (rowH - 14) / 2, popWidth - 46, 14)
-                if done {
-                    let a = NSMutableAttributedString(string: displayText)
-                    a.addAttribute(.strikethroughStyle, value: 1, range: NSRange(location: 0, length: a.length))
-                    a.addAttribute(.foregroundColor, value: TC.faint, range: NSRange(location: 0, length: a.length))
-                    label.attributedStringValue = a
-                }
-                row.addSubview(label)
-
-                container.addSubview(row)
-                if i < planCount - 1 {
-                    let sep = NSView(frame: NSMakeRect(26, y, popWidth - 48, 0.5))
-                    sep.wantsLayer = true
-                    sep.layer?.backgroundColor = NSColor(white: 0, alpha: 0.04).cgColor
-                    container.addSubview(sep)
-                }
-            }
-            if thoughtCount > 0 {
-                y -= sectionGap
-                let div = NSView(frame: NSMakeRect(10, y, popWidth - 20, 0.5))
-                div.wantsLayer = true
-                div.layer?.backgroundColor = NSColor(white: 0, alpha: 0.06).cgColor
-                container.addSubview(div)
-            }
-        }
 
         // ── Thoughts Section ──
         if thoughtCount > 0 {
@@ -2068,54 +1321,6 @@ class ResultBubble {
         return sys
     }
 
-    // MARK: Plan sync
-
-    private func fetchPlan() {
-        guard let url = URL(string: "\(SERVER)/plan") else { return }
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let items = json["items"] as? [[String: Any]] else { return }
-            DispatchQueue.main.async {
-                self?.planItems = items
-                self?.planFilePath = json["file"] as? String ?? ""
-                if self?.popWin.isVisible == true { self?.rebuildPopover() }
-            }
-        }.resume()
-    }
-
-    private func togglePlanItem(_ index: Int) {
-        guard let url = URL(string: "\(SERVER)/plan/toggle") else { return }
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.httpBody = try? JSONSerialization.data(withJSONObject: ["index": index])
-        URLSession.shared.dataTask(with: req) { [weak self] data, _, _ in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  json["ok"] as? Bool == true else { return }
-            let nowDone = json["done"] as? Bool ?? false
-            DispatchQueue.main.async {
-                if nowDone { self?.playCompletionEffect(index: index) }
-                self?.fetchPlan()
-            }
-        }.resume()
-    }
-
-    private func playCompletionEffect(index: Int) {
-        // Sound
-        NSSound(named: "Pop")?.play()
-
-        // Bounce the bubble
-        if let bubble = dotWin.contentView as? ThoughtBubbleView {
-            let bounce = CAKeyframeAnimation(keyPath: "transform.scale")
-            bounce.values = [1.0, 1.15, 0.95, 1.05, 1.0]
-            bounce.keyTimes = [0, 0.2, 0.5, 0.75, 1.0]
-            bounce.duration = 0.35
-            bubble.layer?.add(bounce, forKey: "complete")
-        }
-    }
-
     // MARK: Open in Obsidian
 
     static var vaultName: String = {
@@ -2126,24 +1331,13 @@ class ResultBubble {
         UserDefaults.standard.string(forKey: "storageBackend") ?? "obsidian"
     }()
 
-    /// Fetch config from server. When `sync` is true (used at launch),
-    /// blocks up to 2 seconds so vaultName is ready before any UI.
     static func fetchConfig(sync: Bool = false) {
-        guard let url = URL(string: "\(SERVER)/config") else { return }
-        let sem = sync ? DispatchSemaphore(value: 0) : nil
-        URLSession.shared.dataTask(with: url) { data, _, _ in
-            defer { sem?.signal() }
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let name = json["vaultName"] as? String else { return }
+        if let name = UserDefaults.standard.string(forKey: "vaultName"), !name.isEmpty {
             vaultName = name
-            UserDefaults.standard.set(name, forKey: "vaultName")
-            if let backend = json["storage"] as? String {
-                storageBackend = backend
-                UserDefaults.standard.set(backend, forKey: "storageBackend")
-            }
-        }.resume()
-        if sync { _ = sem?.wait(timeout: .now() + 2) }
+        }
+        if let backend = UserDefaults.standard.string(forKey: "storageBackend"), !backend.isEmpty {
+            storageBackend = backend
+        }
     }
 
     /// Open a saved thought — dispatches to Obsidian or Apple Notes based on backend.

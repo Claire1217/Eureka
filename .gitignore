@@ -3,3 +3,15 @@
 __pycache__/
 ThoughtCapture.app/
 ThoughtCaptureHotkey
+tc_bin
+*.o
+*.dSYM/
+server.py
+global_capture.py
+test_server.py
+.env.example
+archive/
+*.zip
+bubbleicon2.png
+bubbleicon3.png
+capture.sh
