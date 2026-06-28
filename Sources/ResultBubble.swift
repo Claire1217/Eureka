@@ -255,7 +255,7 @@ class ResultBubble {
         root.addSubview(vaultRow)
 
         let vpField = NSTextField(frame: NSMakeRect(0, 2, fw - 66, 22))
-        vpField.placeholderString = "Choose your Obsidian vault folder…"
+        vpField.placeholderString = "Choose folder to save thoughts…"
         vpField.font = .systemFont(ofSize: 12)
         vpField.identifier = NSUserInterfaceItemIdentifier("vaultPath")
         vpField.bezelStyle = .roundedBezel

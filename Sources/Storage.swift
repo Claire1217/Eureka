@@ -70,7 +70,7 @@ class LocalStorage {
                                 appName: String, browserURL: String,
                                 screenshotPath: String?) -> (ok: Bool, savedTo: String) {
         guard !vaultPath.isEmpty else { return (false, "") }
-        let vault = NSString(string: vaultPath).expandingTildeInPath
+        let folder = NSString(string: vaultPath).expandingTildeInPath
         let fm = FileManager.default
 
         let df = DateFormatter()
@@ -80,13 +80,10 @@ class LocalStorage {
         tf.dateFormat = "HH:mm"
         let timeStr = tf.string(from: Date())
 
-        let template = UserDefaults.standard.string(forKey: "notePath")
-            ?? "01_daily/{date}/Daily random thoughts.md"
-        let relPath = template.replacingOccurrences(of: "{date}", with: dateStr)
-        let filePath = "\(vault)/\(relPath)"
-        let dirPath = (filePath as NSString).deletingLastPathComponent
-        try? fm.createDirectory(atPath: dirPath, withIntermediateDirectories: true)
-        let savedTo = relPath
+        try? fm.createDirectory(atPath: folder, withIntermediateDirectories: true)
+        let fileName = "Thoughts \(dateStr).md"
+        let filePath = "\(folder)/\(fileName)"
+        let savedTo = fileName
 
         var source = ""
         if !browserURL.isEmpty, !browserURL.hasPrefix("app://"),
@@ -101,7 +98,7 @@ class LocalStorage {
             let ts = DateFormatter()
             ts.dateFormat = "yyyyMMdd_HHmmss"
             screenshotFilename = "tc_\(ts.string(from: Date())).png"
-            let attachDir = "\(vault)/attachments"
+            let attachDir = "\(folder)/attachments"
             try? fm.createDirectory(atPath: attachDir, withIntermediateDirectories: true)
             fm.createFile(atPath: "\(attachDir)/\(screenshotFilename!)", contents: data)
             try? fm.removeItem(atPath: path)
