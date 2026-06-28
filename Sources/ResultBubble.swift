@@ -183,7 +183,7 @@ class ResultBubble {
         }
         settingsTargets.removeAll()
 
-        let W: CGFloat = 380, H: CGFloat = 330
+        let W: CGFloat = 380, H: CGFloat = 340
         let win = NSWindow(contentRect: NSMakeRect(0, 0, W, H),
                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
         win.title = "ThoughtCapture Settings"
@@ -286,22 +286,24 @@ class ResultBubble {
         storageSeg.action = #selector(StorageToggle.changed(_:))
         settingsTargets.append(storageToggle)
 
-        // ━━━  Thought Agent  ━━━
+        // ━━━  Quick Q&A (DeepSeek)  ━━━
         sep(at: &y)
-        label("THOUGHT AGENT (Claude Code)", at: &y, size: 11, color: .tertiaryLabelColor)
+        label("QUICK Q&A (/slash commands)", at: &y, size: 11, color: .tertiaryLabelColor)
 
-        let agentSeg = NSSegmentedControl(labels: ["Auto (all thoughts)", "@claude only"], trackingMode: .selectOne, target: nil, action: nil)
-        agentSeg.selectedSegment = 0
-        agentSeg.frame = NSMakeRect(px, y - 24, fw, 24)
-        agentSeg.identifier = NSUserInterfaceItemIdentifier("agentMode")
-        root.addSubview(agentSeg)
-        y -= 30
+        label("API Key", at: &y, size: 11, color: .secondaryLabelColor)
+        let apiKeyField = NSSecureTextField(frame: NSMakeRect(px, y - 22, fw, 22))
+        apiKeyField.placeholderString = "sk-..."
+        apiKeyField.font = .systemFont(ofSize: 12)
+        apiKeyField.identifier = NSUserInterfaceItemIdentifier("llmApiKey")
+        apiKeyField.bezelStyle = .roundedBezel
+        root.addSubview(apiKeyField)
+        y -= 32
 
-        let agentHint = NSTextField(labelWithString: "Auto: every thought triggers Claude. @claude: only when you write @claude.")
-        agentHint.font = .systemFont(ofSize: 10)
-        agentHint.textColor = .tertiaryLabelColor
-        agentHint.frame = NSMakeRect(px, y - 14, fw, 14)
-        root.addSubview(agentHint)
+        let apiHint = NSTextField(labelWithString: "Type / to ask AI. Get a key from platform.deepseek.com")
+        apiHint.font = .systemFont(ofSize: 10)
+        apiHint.textColor = .tertiaryLabelColor
+        apiHint.frame = NSMakeRect(px, y - 14, fw, 14)
+        root.addSubview(apiHint)
         y -= 26
 
         // ━━━  Bottom  ━━━
@@ -348,12 +350,15 @@ class ResultBubble {
                 let vaultPath = textField(in: root, id: "vaultPath")?.stringValue ?? ""
                 let vaultName = URL(fileURLWithPath: vaultPath).lastPathComponent
                 let backend = isObsidian ? "obsidian" : "notes"
-                let agentIdx = segValue(in: root, id: "agentMode")
-                let agentMode = agentIdx == 1 ? "@claude" : "auto"
+
+                // API key — NSSecureTextField is also NSTextField
+                let apiKey = textField(in: root, id: "llmApiKey")?.stringValue ?? ""
 
                 LocalStorage.shared.vaultPath = vaultPath
                 LocalStorage.shared.backend = backend
-                LocalStorage.shared.thoughtAgentMode = agentMode
+                if !apiKey.isEmpty {
+                    LocalStorage.shared.llmApiKey = apiKey
+                }
                 if !vaultName.isEmpty {
                     ResultBubble.vaultName = vaultName
                     UserDefaults.standard.set(vaultName, forKey: "vaultName")
@@ -403,7 +408,10 @@ class ResultBubble {
         if !savedVaultPath.isEmpty {
             textField(in: root, id: "vaultPath")?.stringValue = savedVaultPath
         }
-        segControl(in: root, id: "agentMode")?.selectedSegment = LocalStorage.shared.thoughtAgentMode == "@claude" ? 1 : 0
+        let savedKey = LocalStorage.shared.llmApiKey
+        if !savedKey.isEmpty {
+            textField(in: root, id: "llmApiKey")?.stringValue = savedKey
+        }
     }
 
     // MARK: Data
