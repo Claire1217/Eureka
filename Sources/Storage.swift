@@ -80,11 +80,13 @@ class LocalStorage {
         tf.dateFormat = "HH:mm"
         let timeStr = tf.string(from: Date())
 
-        let dayDir = "\(vault)/01_daily/\(dateStr)"
-        try? fm.createDirectory(atPath: dayDir, withIntermediateDirectories: true)
-
-        let filePath = "\(dayDir)/Daily random thoughts.md"
-        let savedTo = "01_daily/\(dateStr)/Daily random thoughts.md"
+        let template = UserDefaults.standard.string(forKey: "notePath")
+            ?? "01_daily/{date}/Daily random thoughts.md"
+        let relPath = template.replacingOccurrences(of: "{date}", with: dateStr)
+        let filePath = "\(vault)/\(relPath)"
+        let dirPath = (filePath as NSString).deletingLastPathComponent
+        try? fm.createDirectory(atPath: dirPath, withIntermediateDirectories: true)
+        let savedTo = relPath
 
         var source = ""
         if !browserURL.isEmpty, !browserURL.hasPrefix("app://"),

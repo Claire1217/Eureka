@@ -366,10 +366,50 @@ class ResultBubble {
 
         // ━━━━━  HOTKEYS  ━━━━━
         sep(at: &y)
-        sectionTitle("HOTKEYS", at: &y)
+        sectionTitle("HOTKEYS (⌥ + key)", at: &y)
 
-        infoRow("Capture:", "⌥T", at: &y)
-        infoRow("Screenshot:", "⌥R", at: &y)
+        let keyOptions = ["A","B","C","D","E","F","G","H","I","J","K","L","M",
+                          "N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+        let keyCodes: [String: UInt32] = [
+            "A":0,"S":1,"D":2,"F":3,"H":4,"G":5,"Z":6,"X":7,"C":8,"V":9,
+            "B":11,"Q":12,"W":13,"E":14,"R":15,"Y":16,"T":17,"U":32,"I":34,
+            "P":35,"L":37,"J":38,"K":40,"N":45,"M":46,"O":31
+        ]
+        func keyForCode(_ code: UInt32) -> String {
+            keyCodes.first(where: { $0.value == code })?.key ?? "T"
+        }
+
+        let curCapture = UserDefaults.standard.object(forKey: "hotkeyCapture") as? UInt32 ?? 17
+        let curScreenshot = UserDefaults.standard.object(forKey: "hotkeyScreenshot") as? UInt32 ?? 15
+
+        // Capture hotkey
+        let capLabel = NSTextField(labelWithString: "Capture:")
+        capLabel.font = .systemFont(ofSize: 12)
+        capLabel.textColor = .secondaryLabelColor
+        capLabel.frame = NSMakeRect(px, y - 22, 80, 20)
+        root.addSubview(capLabel)
+
+        let capPop = NSPopUpButton(frame: NSMakeRect(px + 82, y - 22, 80, 22))
+        capPop.addItems(withTitles: keyOptions.map { "⌥\($0)" })
+        capPop.selectItem(withTitle: "⌥\(keyForCode(curCapture))")
+        capPop.font = .systemFont(ofSize: 12)
+        capPop.identifier = NSUserInterfaceItemIdentifier("hotkeyCapture")
+        root.addSubview(capPop)
+
+        // Screenshot hotkey
+        let ssLabel = NSTextField(labelWithString: "Screenshot:")
+        ssLabel.font = .systemFont(ofSize: 12)
+        ssLabel.textColor = .secondaryLabelColor
+        ssLabel.frame = NSMakeRect(px + 180, y - 22, 80, 20)
+        root.addSubview(ssLabel)
+
+        let ssPop = NSPopUpButton(frame: NSMakeRect(px + 262, y - 22, 80, 22))
+        ssPop.addItems(withTitles: keyOptions.map { "⌥\($0)" })
+        ssPop.selectItem(withTitle: "⌥\(keyForCode(curScreenshot))")
+        ssPop.font = .systemFont(ofSize: 12)
+        ssPop.identifier = NSUserInterfaceItemIdentifier("hotkeyScreenshot")
+        root.addSubview(ssPop)
+        y -= 30
 
         // ━━━━━  ABOUT  ━━━━━
         sep(at: &y)
@@ -433,6 +473,34 @@ class ResultBubble {
                 if !vaultName.isEmpty {
                     ResultBubble.vaultName = vaultName
                     UserDefaults.standard.set(vaultName, forKey: "vaultName")
+                }
+
+                // Save hotkeys
+                let codes: [String: UInt32] = [
+                    "A":0,"S":1,"D":2,"F":3,"H":4,"G":5,"Z":6,"X":7,"C":8,"V":9,
+                    "B":11,"Q":12,"W":13,"E":14,"R":15,"Y":16,"T":17,"U":32,"I":34,
+                    "P":35,"L":37,"J":38,"K":40,"N":45,"M":46,"O":31
+                ]
+                func popupValue(in view: NSView, id: String) -> String? {
+                    for sub in view.subviews {
+                        if let pop = sub as? NSPopUpButton, pop.identifier?.rawValue == id {
+                            return pop.titleOfSelectedItem
+                        }
+                        if let found = popupValue(in: sub, id: id) { return found }
+                    }
+                    return nil
+                }
+                if let capTitle = popupValue(in: root, id: "hotkeyCapture"),
+                   let key = capTitle.last, let code = codes[String(key)] {
+                    UserDefaults.standard.set(code, forKey: "hotkeyCapture")
+                }
+                if let ssTitle = popupValue(in: root, id: "hotkeyScreenshot"),
+                   let key = ssTitle.last, let code = codes[String(key)] {
+                    UserDefaults.standard.set(code, forKey: "hotkeyScreenshot")
+                }
+                // Re-register hotkeys
+                if let delegate = NSApp.delegate as? AppDelegate {
+                    delegate.registerHotkey()
                 }
 
                 // Update status indicator

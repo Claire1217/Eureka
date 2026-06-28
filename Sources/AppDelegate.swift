@@ -106,27 +106,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Global Hotkey (Carbon)
 
+    private var eventHandlerInstalled = false
+
     func registerHotkey() {
-        var eventType = EventTypeSpec()
-        eventType.eventClass = OSType(kEventClassKeyboard)
-        eventType.eventKind = UInt32(kEventHotKeyPressed)
+        // Unregister old hotkeys if re-registering
+        if let ref = hotKeyRef { UnregisterEventHotKey(ref); hotKeyRef = nil }
+        if let ref = hotKeyScreenshotRef { UnregisterEventHotKey(ref); hotKeyScreenshotRef = nil }
 
-        InstallEventHandler(
-            GetApplicationEventTarget(), hotKeyHandler, 1, &eventType,
-            UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()), nil)
+        if !eventHandlerInstalled {
+            var eventType = EventTypeSpec()
+            eventType.eventClass = OSType(kEventClassKeyboard)
+            eventType.eventKind = UInt32(kEventHotKeyPressed)
+            InstallEventHandler(
+                GetApplicationEventTarget(), hotKeyHandler, 1, &eventType,
+                UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()), nil)
+            eventHandlerInstalled = true
+        }
 
-        // ⌥T — thought capture
+        let captureKey = UserDefaults.standard.object(forKey: "hotkeyCapture") as? UInt32 ?? HOTKEY_KEYCODE
+        let screenshotKey = UserDefaults.standard.object(forKey: "hotkeyScreenshot") as? UInt32 ?? HOTKEY_SCREENSHOT
+
         var hotKeyID1 = EventHotKeyID()
-        hotKeyID1.signature = OSType(0x54435F48)  // "TC_H"
+        hotKeyID1.signature = OSType(0x54435F48)
         hotKeyID1.id = 1
-        RegisterEventHotKey(HOTKEY_KEYCODE, HOTKEY_MODIFIERS, hotKeyID1,
+        RegisterEventHotKey(captureKey, HOTKEY_MODIFIERS, hotKeyID1,
                             GetApplicationEventTarget(), 0, &hotKeyRef)
 
-        // ⌥R — screenshot + comment
         var hotKeyID2 = EventHotKeyID()
         hotKeyID2.signature = OSType(0x54435F48)
         hotKeyID2.id = 2
-        RegisterEventHotKey(HOTKEY_SCREENSHOT, HOTKEY_MODIFIERS, hotKeyID2,
+        RegisterEventHotKey(screenshotKey, HOTKEY_MODIFIERS, hotKeyID2,
                             GetApplicationEventTarget(), 0, &hotKeyScreenshotRef)
     }
 
