@@ -184,7 +184,7 @@ class ResultBubble {
         }
         settingsTargets.removeAll()
 
-        let W: CGFloat = 400, H: CGFloat = 530
+        let W: CGFloat = 420, H: CGFloat = 500
         let win = NSWindow(contentRect: NSMakeRect(0, 0, W, H),
                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
         win.title = "ThoughtCapture Settings"
@@ -250,11 +250,11 @@ class ResultBubble {
         y -= 34
 
         // Vault folder row
-        let vaultRow = NSView(frame: NSMakeRect(px, y - 26, fw, 26))
+        let vaultRow = NSView(frame: NSMakeRect(px, y - 48, fw, 48))
         vaultRow.identifier = NSUserInterfaceItemIdentifier("vaultRow")
         root.addSubview(vaultRow)
 
-        let vpField = NSTextField(frame: NSMakeRect(0, 2, fw - 66, 22))
+        let vpField = NSTextField(frame: NSMakeRect(0, 26, fw, 22))
         vpField.placeholderString = "e.g. ~/obsidian-vault/01_daily"
         vpField.font = .systemFont(ofSize: 12)
         vpField.identifier = NSUserInterfaceItemIdentifier("vaultPath")
@@ -265,11 +265,15 @@ class ResultBubble {
         browseBtn.bezelStyle = .rounded
         browseBtn.controlSize = .small
         browseBtn.font = .systemFont(ofSize: 11)
-        browseBtn.frame = NSMakeRect(fw - 62, 1, 62, 22)
+        browseBtn.frame = NSMakeRect(0, 0, 72, 22)
         vaultRow.addSubview(browseBtn)
-        y -= 28
 
-        hint("Saves to: folder / 2026-06-29 / Thoughts.md", at: &y)
+        let pathHint = NSTextField(labelWithString: "→ folder / 2026-06-29 / Thoughts.md")
+        pathHint.font = .systemFont(ofSize: 10)
+        pathHint.textColor = .tertiaryLabelColor
+        pathHint.frame = NSMakeRect(78, 3, fw - 78, 14)
+        vaultRow.addSubview(pathHint)
+        y -= 56
 
         class BrowseHandler: NSObject {
             weak var pathField: NSTextField?
@@ -422,14 +426,21 @@ class ResultBubble {
         let curSSKey = UserDefaults.standard.object(forKey: "hotkeyScreenshot") as? UInt32 ?? 15
         let curSSMod = UserDefaults.standard.object(forKey: "hotkeyScreenshotMods") as? UInt32 ?? UInt32(optionKey)
 
+        let labelW: CGFloat = 80
+        let popModW: CGFloat = 120
+        let popKeyW: CGFloat = 56
+        let popX = px + labelW
+        let plusX = popX + popModW + 4
+        let keyX = plusX + 16
+
         // Capture row
         let capLabel = NSTextField(labelWithString: "Capture:")
         capLabel.font = .systemFont(ofSize: 12)
         capLabel.textColor = .secondaryLabelColor
-        capLabel.frame = NSMakeRect(px, y - 22, 62, 20)
+        capLabel.frame = NSMakeRect(px, y - 20, labelW, 16)
         root.addSubview(capLabel)
 
-        let capModPop = NSPopUpButton(frame: NSMakeRect(px + 64, y - 24, 120, 24))
+        let capModPop = NSPopUpButton(frame: NSMakeRect(popX, y - 24, popModW, 24))
         capModPop.addItems(withTitles: modLabels)
         capModPop.selectItem(at: modIndex(curCapMod))
         capModPop.font = .systemFont(ofSize: 12)
@@ -439,25 +450,25 @@ class ResultBubble {
         let plusLabel1 = NSTextField(labelWithString: "+")
         plusLabel1.font = .systemFont(ofSize: 13, weight: .medium)
         plusLabel1.textColor = .secondaryLabelColor
-        plusLabel1.frame = NSMakeRect(px + 186, y - 20, 14, 16)
+        plusLabel1.frame = NSMakeRect(plusX, y - 20, 14, 16)
         root.addSubview(plusLabel1)
 
-        let capKeyPop = NSPopUpButton(frame: NSMakeRect(px + 200, y - 24, 60, 24))
+        let capKeyPop = NSPopUpButton(frame: NSMakeRect(keyX, y - 24, popKeyW, 24))
         capKeyPop.addItems(withTitles: keyLabels)
         capKeyPop.selectItem(withTitle: keyForCode(curCapKey))
         capKeyPop.font = .systemFont(ofSize: 12)
         capKeyPop.identifier = NSUserInterfaceItemIdentifier("capKey")
         root.addSubview(capKeyPop)
-        y -= 32
+        y -= 30
 
         // Screenshot row
         let ssLabel = NSTextField(labelWithString: "Screenshot:")
         ssLabel.font = .systemFont(ofSize: 12)
         ssLabel.textColor = .secondaryLabelColor
-        ssLabel.frame = NSMakeRect(px, y - 22, 62, 20)
+        ssLabel.frame = NSMakeRect(px, y - 20, labelW, 16)
         root.addSubview(ssLabel)
 
-        let ssModPop = NSPopUpButton(frame: NSMakeRect(px + 64, y - 24, 120, 24))
+        let ssModPop = NSPopUpButton(frame: NSMakeRect(popX, y - 24, popModW, 24))
         ssModPop.addItems(withTitles: modLabels)
         ssModPop.selectItem(at: modIndex(curSSMod))
         ssModPop.font = .systemFont(ofSize: 12)
@@ -467,16 +478,16 @@ class ResultBubble {
         let plusLabel2 = NSTextField(labelWithString: "+")
         plusLabel2.font = .systemFont(ofSize: 13, weight: .medium)
         plusLabel2.textColor = .secondaryLabelColor
-        plusLabel2.frame = NSMakeRect(px + 186, y - 20, 14, 16)
+        plusLabel2.frame = NSMakeRect(plusX, y - 20, 14, 16)
         root.addSubview(plusLabel2)
 
-        let ssKeyPop = NSPopUpButton(frame: NSMakeRect(px + 200, y - 24, 60, 24))
+        let ssKeyPop = NSPopUpButton(frame: NSMakeRect(keyX, y - 24, popKeyW, 24))
         ssKeyPop.addItems(withTitles: keyLabels)
         ssKeyPop.selectItem(withTitle: keyForCode(curSSKey))
         ssKeyPop.font = .systemFont(ofSize: 12)
         ssKeyPop.identifier = NSUserInterfaceItemIdentifier("ssKey")
         root.addSubview(ssKeyPop)
-        y -= 32
+        y -= 30
 
         // ━━━━━  ABOUT  ━━━━━
         sep(at: &y)
