@@ -183,7 +183,7 @@ class ResultBubble {
         }
         settingsTargets.removeAll()
 
-        let W: CGFloat = 380, H: CGFloat = 340
+        let W: CGFloat = 400, H: CGFloat = 480
         let win = NSWindow(contentRect: NSMakeRect(0, 0, W, H),
                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
         win.title = "ThoughtCapture Settings"
@@ -198,13 +198,22 @@ class ResultBubble {
         var y: CGFloat = H - 24
 
         // ── Helpers ──
-        func label(_ text: String, at yy: inout CGFloat, size: CGFloat = 11, color: NSColor = .secondaryLabelColor) {
+        func sectionTitle(_ text: String, at yy: inout CGFloat) {
             let l = NSTextField(labelWithString: text)
-            l.font = .systemFont(ofSize: size)
-            l.textColor = color
-            l.frame = NSMakeRect(px, yy - 14, fw, 14)
+            l.font = .systemFont(ofSize: 11, weight: .medium)
+            l.textColor = .tertiaryLabelColor
             root.addSubview(l)
-            yy -= 18
+            l.frame = NSMakeRect(px, yy - 14, fw, 14)
+            yy -= 22
+        }
+
+        func hint(_ text: String, at yy: inout CGFloat) {
+            let l = NSTextField(labelWithString: text)
+            l.font = .systemFont(ofSize: 10)
+            l.textColor = .tertiaryLabelColor
+            l.frame = NSMakeRect(px, yy - 12, fw, 12)
+            root.addSubview(l)
+            yy -= 16
         }
 
         func sep(at yy: inout CGFloat) {
@@ -215,23 +224,37 @@ class ResultBubble {
             yy -= 20
         }
 
-        // ━━━  Storage  ━━━
-        label("SAVE TO", at: &y, size: 11, color: .tertiaryLabelColor)
+        func infoRow(_ label: String, _ value: String, at yy: inout CGFloat) {
+            let lbl = NSTextField(labelWithString: label)
+            lbl.font = .systemFont(ofSize: 12)
+            lbl.textColor = .secondaryLabelColor
+            lbl.frame = NSMakeRect(px, yy - 16, 100, 16)
+            root.addSubview(lbl)
+            let val = NSTextField(labelWithString: value)
+            val.font = .systemFont(ofSize: 12)
+            val.textColor = .labelColor
+            val.frame = NSMakeRect(px + 100, yy - 16, fw - 100, 16)
+            root.addSubview(val)
+            yy -= 22
+        }
+
+        // ━━━━━  STORAGE  ━━━━━
+        sectionTitle("STORAGE", at: &y)
 
         let storageSeg = NSSegmentedControl(labels: ["Obsidian Vault", "Apple Notes"], trackingMode: .selectOne, target: nil, action: nil)
         storageSeg.selectedSegment = 0
         storageSeg.frame = NSMakeRect(px, y - 24, fw, 24)
         storageSeg.identifier = NSUserInterfaceItemIdentifier("storage")
         root.addSubview(storageSeg)
-        y -= 36
+        y -= 34
 
-        // Vault folder
+        // Vault folder row
         let vaultRow = NSView(frame: NSMakeRect(px, y - 26, fw, 26))
         vaultRow.identifier = NSUserInterfaceItemIdentifier("vaultRow")
         root.addSubview(vaultRow)
 
         let vpField = NSTextField(frame: NSMakeRect(0, 2, fw - 66, 22))
-        vpField.placeholderString = "~/obsidian"
+        vpField.placeholderString = "Choose your Obsidian vault folder…"
         vpField.font = .systemFont(ofSize: 12)
         vpField.identifier = NSUserInterfaceItemIdentifier("vaultPath")
         vpField.bezelStyle = .roundedBezel
@@ -243,7 +266,28 @@ class ResultBubble {
         browseBtn.font = .systemFont(ofSize: 11)
         browseBtn.frame = NSMakeRect(fw - 62, 1, 62, 22)
         vaultRow.addSubview(browseBtn)
-        y -= 36
+        y -= 34
+
+        // Note path template
+        let notePathRow = NSView(frame: NSMakeRect(px, y - 26, fw, 26))
+        notePathRow.identifier = NSUserInterfaceItemIdentifier("notePathRow")
+        root.addSubview(notePathRow)
+
+        let npLabel = NSTextField(labelWithString: "Save to:")
+        npLabel.font = .systemFont(ofSize: 12)
+        npLabel.textColor = .secondaryLabelColor
+        npLabel.frame = NSMakeRect(0, 4, 52, 16)
+        notePathRow.addSubview(npLabel)
+
+        let npField = NSTextField(frame: NSMakeRect(54, 2, fw - 54, 22))
+        npField.placeholderString = "01_daily/{date}/Daily random thoughts.md"
+        npField.font = .systemFont(ofSize: 11)
+        npField.identifier = NSUserInterfaceItemIdentifier("notePath")
+        npField.bezelStyle = .roundedBezel
+        notePathRow.addSubview(npField)
+        y -= 30
+
+        hint("{date} = 2026-06-29", at: &y)
 
         class BrowseHandler: NSObject {
             weak var pathField: NSTextField?
@@ -266,10 +310,12 @@ class ResultBubble {
 
         class StorageToggle: NSObject {
             weak var vaultRow: NSView?
+            weak var notePathRow: NSView?
             @objc func changed(_ sender: NSSegmentedControl) {
-                vaultRow?.isHidden = sender.selectedSegment != 0
-                if sender.selectedSegment == 1 {
-                    // Trigger Automation permission for Notes on first switch
+                let isNotes = sender.selectedSegment == 1
+                vaultRow?.isHidden = isNotes
+                notePathRow?.isHidden = isNotes
+                if isNotes {
                     DispatchQueue.global().async {
                         let proc = Process()
                         proc.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
@@ -282,31 +328,56 @@ class ResultBubble {
         }
         let storageToggle = StorageToggle()
         storageToggle.vaultRow = vaultRow
+        storageToggle.notePathRow = notePathRow
         storageSeg.target = storageToggle
         storageSeg.action = #selector(StorageToggle.changed(_:))
         settingsTargets.append(storageToggle)
 
-        // ━━━  Quick Q&A (DeepSeek)  ━━━
+        // ━━━━━  QUICK Q&A  ━━━━━
         sep(at: &y)
-        label("QUICK Q&A (/slash commands)", at: &y, size: 11, color: .tertiaryLabelColor)
+        sectionTitle("QUICK Q&A", at: &y)
 
-        label("API Key", at: &y, size: 11, color: .secondaryLabelColor)
+        // Status indicator
+        let hasKey = !LocalStorage.shared.llmApiKey.isEmpty
+        let statusDot = NSTextField(labelWithString: hasKey ? "✓ Connected" : "✗ Not configured")
+        statusDot.font = .systemFont(ofSize: 12)
+        statusDot.textColor = hasKey ? .systemGreen : .systemOrange
+        statusDot.frame = NSMakeRect(px, y - 16, fw - 80, 16)
+        statusDot.identifier = NSUserInterfaceItemIdentifier("apiStatus")
+        root.addSubview(statusDot)
+
+        let modelLabel = NSTextField(labelWithString: LocalStorage.shared.llmModel)
+        modelLabel.font = .systemFont(ofSize: 11)
+        modelLabel.textColor = .tertiaryLabelColor
+        modelLabel.alignment = .right
+        modelLabel.frame = NSMakeRect(W - px - 80, y - 16, 80, 16)
+        root.addSubview(modelLabel)
+        y -= 26
+
         let apiKeyField = NSSecureTextField(frame: NSMakeRect(px, y - 22, fw, 22))
         apiKeyField.placeholderString = "sk-..."
         apiKeyField.font = .systemFont(ofSize: 12)
         apiKeyField.identifier = NSUserInterfaceItemIdentifier("llmApiKey")
         apiKeyField.bezelStyle = .roundedBezel
         root.addSubview(apiKeyField)
-        y -= 32
+        y -= 28
 
-        let apiHint = NSTextField(labelWithString: "Type / to ask AI. Get a key from platform.deepseek.com")
-        apiHint.font = .systemFont(ofSize: 10)
-        apiHint.textColor = .tertiaryLabelColor
-        apiHint.frame = NSMakeRect(px, y - 14, fw, 14)
-        root.addSubview(apiHint)
-        y -= 26
+        hint("Type / to ask AI · Get key: platform.deepseek.com", at: &y)
 
-        // ━━━  Bottom  ━━━
+        // ━━━━━  HOTKEYS  ━━━━━
+        sep(at: &y)
+        sectionTitle("HOTKEYS", at: &y)
+
+        infoRow("Capture:", "⌥T", at: &y)
+        infoRow("Screenshot:", "⌥R", at: &y)
+
+        // ━━━━━  ABOUT  ━━━━━
+        sep(at: &y)
+        sectionTitle("ABOUT", at: &y)
+
+        infoRow("Version:", "1.0", at: &y)
+
+        // ━━━━━  Bottom bar  ━━━━━
         let statusLabel = NSTextField(labelWithString: "")
         statusLabel.font = .systemFont(ofSize: 11)
         statusLabel.textColor = .systemGreen
@@ -322,9 +393,7 @@ class ResultBubble {
 
         win.contentView = root
 
-        // ── Wire up actions ──
-
-        // Save
+        // ── Save handler ──
         class SaveHandler: NSObject {
             weak var root: NSView?
             @objc func save(_ sender: Any) {
@@ -350,19 +419,27 @@ class ResultBubble {
                 let vaultPath = textField(in: root, id: "vaultPath")?.stringValue ?? ""
                 let vaultName = URL(fileURLWithPath: vaultPath).lastPathComponent
                 let backend = isObsidian ? "obsidian" : "notes"
-
-                // API key — NSSecureTextField is also NSTextField
                 let apiKey = textField(in: root, id: "llmApiKey")?.stringValue ?? ""
+                let notePath = textField(in: root, id: "notePath")?.stringValue ?? ""
 
                 LocalStorage.shared.vaultPath = vaultPath
                 LocalStorage.shared.backend = backend
                 if !apiKey.isEmpty {
                     LocalStorage.shared.llmApiKey = apiKey
                 }
+                if !notePath.isEmpty {
+                    UserDefaults.standard.set(notePath, forKey: "notePath")
+                }
                 if !vaultName.isEmpty {
                     ResultBubble.vaultName = vaultName
                     UserDefaults.standard.set(vaultName, forKey: "vaultName")
                 }
+
+                // Update status indicator
+                let statusField = textField(in: root, id: "apiStatus")
+                let keySet = !LocalStorage.shared.llmApiKey.isEmpty
+                statusField?.stringValue = keySet ? "✓ Connected" : "✗ Not configured"
+                statusField?.textColor = keySet ? .systemGreen : .systemOrange
 
                 let status = textField(in: root, id: "status")
                 status?.textColor = .systemGreen
@@ -379,14 +456,15 @@ class ResultBubble {
         settingsTargets.append(saveHandler)
 
         // ── Load current values ──
-        loadSettings(root: root, storageSeg: storageSeg, vaultRow: vaultRow)
+        loadSettings(root: root, storageSeg: storageSeg, vaultRow: vaultRow, notePathRow: notePathRow)
 
         settingsWin = win
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func loadSettings(root: NSView, storageSeg: NSSegmentedControl, vaultRow: NSView) {
+    private func loadSettings(root: NSView, storageSeg: NSSegmentedControl,
+                              vaultRow: NSView, notePathRow: NSView) {
         func textField(in view: NSView, id: String) -> NSTextField? {
             for sub in view.subviews {
                 if let tf = sub as? NSTextField, tf.identifier?.rawValue == id { return tf }
@@ -394,16 +472,11 @@ class ResultBubble {
             }
             return nil
         }
-        func segControl(in view: NSView, id: String) -> NSSegmentedControl? {
-            for sub in view.subviews {
-                if let seg = sub as? NSSegmentedControl, seg.identifier?.rawValue == id { return seg }
-                if let found = segControl(in: sub, id: id) { return found }
-            }
-            return nil
-        }
         let storage = LocalStorage.shared.backend
         storageSeg.selectedSegment = storage == "notes" ? 1 : 0
         vaultRow.isHidden = storage == "notes"
+        notePathRow.isHidden = storage == "notes"
+
         let savedVaultPath = LocalStorage.shared.vaultPath
         if !savedVaultPath.isEmpty {
             textField(in: root, id: "vaultPath")?.stringValue = savedVaultPath
@@ -411,6 +484,10 @@ class ResultBubble {
         let savedKey = LocalStorage.shared.llmApiKey
         if !savedKey.isEmpty {
             textField(in: root, id: "llmApiKey")?.stringValue = savedKey
+        }
+        let savedNotePath = UserDefaults.standard.string(forKey: "notePath") ?? ""
+        if !savedNotePath.isEmpty {
+            textField(in: root, id: "notePath")?.stringValue = savedNotePath
         }
     }
 
