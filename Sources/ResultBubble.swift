@@ -535,7 +535,6 @@ class ResultBubble {
 
                 let isObsidian = segValue(in: root, id: "storage") == 0
                 let vaultPath = textField(in: root, id: "vaultPath")?.stringValue ?? ""
-                let vaultName = URL(fileURLWithPath: vaultPath).lastPathComponent
                 let backend = isObsidian ? "obsidian" : "notes"
                 let apiKey = textField(in: root, id: "llmApiKey")?.stringValue ?? ""
 
@@ -544,9 +543,20 @@ class ResultBubble {
                 if !apiKey.isEmpty {
                     LocalStorage.shared.llmApiKey = apiKey
                 }
-                if !vaultName.isEmpty {
-                    ResultBubble.vaultName = vaultName
-                    UserDefaults.standard.set(vaultName, forKey: "vaultName")
+                // Find vault root by walking up to the folder containing .obsidian/
+                let expanded = NSString(string: vaultPath).expandingTildeInPath
+                var dir = expanded
+                var foundVault = ""
+                while dir != "/" && !dir.isEmpty {
+                    if FileManager.default.fileExists(atPath: "\(dir)/.obsidian") {
+                        foundVault = URL(fileURLWithPath: dir).lastPathComponent
+                        break
+                    }
+                    dir = (dir as NSString).deletingLastPathComponent
+                }
+                if !foundVault.isEmpty {
+                    ResultBubble.vaultName = foundVault
+                    UserDefaults.standard.set(foundVault, forKey: "vaultName")
                 }
 
                 // Save hotkeys from dropdowns

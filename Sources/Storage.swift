@@ -67,7 +67,18 @@ class LocalStorage {
         try? fm.createDirectory(atPath: dayDir, withIntermediateDirectories: true)
         let fileName = "Thoughts.md"
         let filePath = "\(dayDir)/\(fileName)"
-        let savedTo = "\(dateStr)/\(fileName)"
+        // savedTo must be relative to vault root for obsidian:// deep links
+        var vaultRoot = folder
+        while vaultRoot != "/" && !vaultRoot.isEmpty {
+            if fm.fileExists(atPath: "\(vaultRoot)/.obsidian") { break }
+            vaultRoot = (vaultRoot as NSString).deletingLastPathComponent
+        }
+        let savedTo: String
+        if filePath.hasPrefix(vaultRoot + "/") {
+            savedTo = String(filePath.dropFirst(vaultRoot.count + 1))
+        } else {
+            savedTo = "\(dateStr)/\(fileName)"
+        }
 
         var source = ""
         if !browserURL.isEmpty, !browserURL.hasPrefix("app://"),

@@ -44,8 +44,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if panel.runModal() == .OK, let url = panel.url {
                 LocalStorage.shared.vaultPath = url.path
                 LocalStorage.shared.backend = "obsidian"
-                ResultBubble.vaultName = url.lastPathComponent
-                UserDefaults.standard.set(url.lastPathComponent, forKey: "vaultName")
+                // Walk up to find vault root (.obsidian/ directory)
+                var dir = url.path
+                while dir != "/" && !dir.isEmpty {
+                    if FileManager.default.fileExists(atPath: "\(dir)/.obsidian") {
+                        let name = URL(fileURLWithPath: dir).lastPathComponent
+                        ResultBubble.vaultName = name
+                        UserDefaults.standard.set(name, forKey: "vaultName")
+                        break
+                    }
+                    dir = (dir as NSString).deletingLastPathComponent
+                }
             }
         } else {
             LocalStorage.shared.backend = "notes"
