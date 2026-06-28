@@ -1,7 +1,7 @@
 #!/bin/bash
-# Build ThoughtCapture.app from source
-# Uses persistent "ThoughtCapture Dev" certificate so Accessibility permission
-# survives across rebuilds (TCC matches by certificate identity, not CDHash).
+# Developer build: uses persistent "ThoughtCapture Dev" certificate
+# so Accessibility permission survives across rebuilds.
+# Run setup_cert.sh first to create the certificate.
 set -e
 cd "$(dirname "$0")"
 
@@ -12,14 +12,13 @@ SIGNING_ID="ThoughtCapture Dev"
 # Verify signing identity exists
 if ! security find-identity -v -p codesigning 2>/dev/null | grep -q "$SIGNING_ID"; then
     echo "ERROR: Signing identity '$SIGNING_ID' not found."
-    echo "Run setup_cert.sh first to create the code signing certificate."
+    echo "Run ./setup_cert.sh first to create the code signing certificate."
     exit 1
 fi
 
 # Create app bundle structure
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-# Write Info.plist
 cat > "$APP/Contents/Info.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -36,14 +35,14 @@ cat > "$APP/Contents/Info.plist" << 'EOF'
     <string>1.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>ThoughtCapture needs Automation access to save thoughts to Apple Notes.</string>
 </dict>
 </plist>
 EOF
 
-# Copy icon
 cp -f bubbleicon.png "$APP/Contents/Resources/" 2>/dev/null || true
 
-# Compile
 echo "Compiling..."
 swiftc Sources/*.swift \
     -o "$BINARY" \
@@ -53,7 +52,6 @@ swiftc Sources/*.swift \
     -framework CoreGraphics \
     -framework WebKit
 
-# Sign with persistent certificate (NOT adhoc)
 echo "Signing with '$SIGNING_ID'..."
 codesign --force --sign "$SIGNING_ID" "$APP"
 
@@ -61,4 +59,4 @@ echo ""
 echo "✓ Built $APP (signed with $SIGNING_ID)"
 echo "  Accessibility permission will persist across rebuilds."
 echo ""
-echo "To deploy: ./deploy.sh"
+echo "To install: ./deploy.sh"

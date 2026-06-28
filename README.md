@@ -5,7 +5,7 @@ A lightweight macOS menu bar app for capturing fleeting thoughts. Press a hotkey
 ## Features
 
 - **Global hotkey** — capture thoughts from any app without switching windows
-- **/ AI Quick Answer** — type `/` followed by a question to get an instant AI answer (powered by DeepSeek)
+- **AI Quick Answer** — type `/` followed by a question to get an instant AI answer (powered by DeepSeek)
 - **Context-aware** — automatically captures selected text and browser URL as context
 - **Screenshot capture** — annotate screenshots with thoughts
 - **Obsidian or Apple Notes** — choose where to save
@@ -13,11 +13,22 @@ A lightweight macOS menu bar app for capturing fleeting thoughts. Press a hotkey
 ## Install
 
 ### Download (recommended)
-1. Download the latest `.zip` from [Releases](https://github.com/Claire1217/ThoughtCapture/releases)
-2. Unzip and drag `ThoughtCapture.app` to `/Applications`
-3. Right-click the app → **Open** (first time only, to bypass unsigned app warning)
 
-### Build from source
+1. Download the latest `.zip` from [Releases](https://github.com/Claire1217/ThoughtCapture/releases)
+2. Unzip and move `ThoughtCapture.app` to `/Applications`
+3. **Bypass Gatekeeper** (required for unsigned apps): right-click the app → **Open**, or run:
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/ThoughtCapture.app
+   ```
+4. **System Settings → Privacy & Security → Accessibility** → enable ThoughtCapture
+
+Or one-liner install:
+```bash
+cd /tmp && curl -LOsS "$(curl -s https://api.github.com/repos/Claire1217/ThoughtCapture/releases/latest | grep browser_download_url | cut -d'"' -f4)" && unzip -oq ThoughtCapture-*.zip -d /Applications && xattr -dr com.apple.quarantine /Applications/ThoughtCapture.app && open /Applications/ThoughtCapture.app
+```
+
+### Build from source (for developers)
+
 Requires macOS 12+ and Xcode Command Line Tools (`xcode-select --install`).
 
 ```bash
@@ -26,7 +37,14 @@ cd ThoughtCapture
 ./deploy.sh
 ```
 
-After first launch:
+For frequent rebuilds without re-granting Accessibility each time:
+```bash
+./setup_cert.sh   # one-time: creates a persistent signing certificate
+./build.sh        # uses the certificate so TCC permission survives rebuilds
+```
+
+### First launch
+
 1. **System Settings → Privacy & Security → Accessibility** → enable ThoughtCapture
 2. Right-click the **TC** menu bar icon → **Settings** → choose your save folder
 3. (Optional) Paste a [DeepSeek API key](https://platform.deepseek.com) to enable `/` AI answers
@@ -56,19 +74,15 @@ your-folder/
     Thoughts.md
 ```
 
-## Obsidian Styling (optional)
+## Obsidian Styling
 
-For styled thought cards, copy `thought-cards.css` to your vault:
+The custom callout styles (colored thought cards with sparkle icon) are **installed automatically** when you save Settings with the Obsidian backend. Restart Obsidian to see the change.
 
-```bash
-cp thought-cards.css /path/to/vault/.obsidian/snippets/
-```
+If you prefer to install manually: copy `thought-cards.css` to `.obsidian/snippets/`, then enable it in Obsidian Settings → Appearance → CSS snippets.
 
-Then in Obsidian: **Settings → Appearance → CSS snippets** → enable **thought-cards**.
+## CLI Configuration
 
-## Configuration
-
-All settings are in the menu bar → **Settings**, or via CLI:
+All settings are accessible via `defaults write`, useful for scripted or AI-agent setup:
 
 ```bash
 # Storage — path to the folder where thoughts are saved
@@ -78,7 +92,7 @@ defaults write com.thoughtcapture.app storageBackend "obsidian"  # or "notes"
 # AI Quick Answer — DeepSeek API key (enables / commands)
 defaults write com.thoughtcapture.app llmApiKey "sk-your-key"
 
-# Restart app to apply CLI changes
+# Restart app to apply
 killall ThoughtCapture; open /Applications/ThoughtCapture.app
 ```
 

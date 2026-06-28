@@ -1,4 +1,5 @@
 #!/bin/bash
+# Build and install ThoughtCapture to /Applications
 set -e
 cd "$(dirname "$0")"
 
@@ -33,6 +34,8 @@ cat > /Applications/ThoughtCapture.app/Contents/Info.plist << 'EOF'
     <string>1.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>ThoughtCapture needs Automation access to save thoughts to Apple Notes.</string>
 </dict>
 </plist>
 EOF
