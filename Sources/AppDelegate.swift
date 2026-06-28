@@ -371,8 +371,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard !apiKey.isEmpty else {
             fputs("[TC] DeepSeek API key not set\n", stderr)
-            capturePanel?.appendStreamChunk("⚠️ API key 未设置 — 在 Settings 里配置 DeepSeek API key")
-            capturePanel?.finishStream()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.capturePanel?.finishStreamWithMessage("API key 未设置\n\n右键菜单栏 TC → Settings → 填入 DeepSeek API key\n获取: platform.deepseek.com")
+            }
             return
         }
 

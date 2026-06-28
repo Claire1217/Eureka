@@ -32,6 +32,11 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
     private var isAIMode = false
     private let aiColor = NSColor(red: 0.55, green: 0.36, blue: 0.85, alpha: 1)
     private var topRegionH: CGFloat = 10
+    private var quoteOffsetFromTop: CGFloat = 10
+    private var questionLabel: NSTextField?
+    private var submittedQuestion = ""
+    private var dotsTimer: Timer?
+    private var streamTimer: Timer?
 
     func show(selectedText: String, anchorPoint: NSPoint,
               screenshotPath: String? = nil,
@@ -112,6 +117,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
             label.frame = NSMakeRect(20, ctxY + 2, pw - 40, 14)
             c.addSubview(label)
             quoteLabel = label
+            quoteOffsetFromTop = 36
         }
 
         // NSTextView in NSScrollView for auto-wrapping input
@@ -206,6 +212,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
     }
 
     private func resizeToFit() {
+        if answerPhase { return }
         guard let tv = textView, let sv = scrollView,
               let p = panel, let c = card else { return }
 
@@ -304,98 +311,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
 
     // MARK: Streaming answer display
 
-    private var answerView: NSTextView?
-    private var answerScroll: NSScrollView?
     private var answerPhase = false
-
-    func showStreamingAnswer() {
-        guard let p = panel, let c = card else { return }
-        answerPhase = true
-
-        // Disable input
-        textView?.isEditable = false
-        textView?.textColor = TC.muted
-        hintLabel?.stringValue = "esc 关闭"
-        hintLabel?.textColor = TC.faint
-
-        // Prepare answer views (initially hidden, zero height)
-        let sep = NSView(frame: NSMakeRect(16, 0, pw - 32, 1))
-        sep.wantsLayer = true
-        sep.layer?.backgroundColor = NSColor.separatorColor.cgColor
-        sep.identifier = NSUserInterfaceItemIdentifier("answerSep")
-        c.addSubview(sep)
-
-        let asv = NSScrollView(frame: NSMakeRect(10, 8, pw - 20, 0))
-        asv.hasVerticalScroller = true
-        asv.hasHorizontalScroller = false
-        asv.borderType = .noBorder
-        asv.drawsBackground = false
-        asv.autohidesScrollers = true
-
-        let atv = NSTextView(frame: NSMakeRect(0, 0, pw - 28, 0))
-        atv.font = NSFont.systemFont(ofSize: 12)
-        atv.textColor = TC.faint
-        atv.drawsBackground = false
-        atv.isEditable = false
-        atv.isSelectable = true
-        atv.textContainerInset = NSSize(width: 4, height: 4)
-        atv.textContainer?.widthTracksTextView = true
-        atv.textContainer?.containerSize = NSSize(width: pw - 36, height: CGFloat.greatestFiniteMagnitude)
-        atv.isVerticallyResizable = true
-        atv.string = "thinking..."
-        asv.documentView = atv
-        c.addSubview(asv)
-        answerView = atv
-        answerScroll = asv
-
-        // Animate expansion
-        let ansH: CGFloat = 140
-        let frame = p.frame
-        let newFrame = NSMakeRect(frame.origin.x, frame.origin.y - ansH,
-                                  frame.width, frame.height + ansH)
-
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.2
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            p.animator().setFrame(newFrame, display: true)
-        } completionHandler: {
-            c.frame = NSMakeRect(0, 0, newFrame.width, newFrame.height)
-            sep.frame = NSMakeRect(16, ansH + 2, self.pw - 32, 1)
-            asv.frame = NSMakeRect(10, 8, self.pw - 20, ansH - 12)
-            atv.frame = NSMakeRect(0, 0, self.pw - 28, ansH - 12)
-        }
-    }
-
-    func appendStreamChunk(_ chunk: String) {
-        guard let atv = answerView else { return }
-        if atv.string == "thinking..." {
-            atv.string = ""
-            atv.textColor = TC.sub
-        }
-        atv.string += chunk
-        atv.scrollToEndOfDocument(nil)
-    }
-
-    func finishStream() {
-        hintLabel?.stringValue = "esc 关闭 · 已完成"
-        hintLabel?.textColor = TC.faint
-    }
-
-    var isOpen: Bool { panel != nil }
-
-    func close() {
-        fputs("[TC] CapturePanel.close()\n", stderr)
-        answerView = nil; answerScroll = nil; answerPhase = false
-        panel?.close(); panel = nil
-        screenshotView = nil
-        ctxBoxView = nil
-        isAIMode = false
-        if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }
-        if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
-    }
-
-    // Quote offset from top — set once in show(), never changes
-    private var quoteOffsetFromTop: CGFloat = 0
 
     private func repositionTopElements(_ totalH: CGFloat) {
         if hasQuote {
@@ -406,6 +322,199 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
             quoteLabel?.font = NSFont.systemFont(ofSize: 11)
             quoteLabel?.frame = NSMakeRect(20, ctxY + 2, pw - 40, 14)
         }
+    }
+
+    func showStreamingAnswer() {
+        guard let p = panel, let c = card, let tv = textView, let sv = scrollView else { return }
+
+        answerPhase = true
+        submittedQuestion = tv.string
+        tv.textStorage?.setAttributedString(NSAttributedString(string: ""))
+        if let ph = c.viewWithTag(999) { ph.isHidden = true }
+        questionLabel?.removeFromSuperview()
+        screenshotView?.isHidden = true
+
+        // Show styled question label where input was
+        let ql = NSTextField(labelWithString: "")
+        ql.lineBreakMode = .byTruncatingTail
+        ql.attributedStringValue = Self.styledQuestion(submittedQuestion)
+        c.addSubview(ql, positioned: .above, relativeTo: nil)
+        questionLabel = ql
+
+        let qY = sv.frame.origin.y + 2
+        ql.frame = NSMakeRect(16, qY, pw - 32, 16)
+
+        // Resize to dots phase
+        let dotsH: CGFloat = 20
+        let totalH = quoteOffsetFromTop + 16 + 12 + dotsH + 12
+
+        var frame = p.frame
+        let dy = totalH - frame.size.height
+        frame.origin.y -= dy
+        frame.size.height = totalH
+        p.setFrame(frame, display: true)
+        c.frame = NSMakeRect(0, 0, pw, totalH)
+
+        repositionTopElements(totalH)
+        let newQY = totalH - quoteOffsetFromTop - 16 - 12
+        ql.frame = NSMakeRect(16, newQY, pw - 32, 16)
+
+        sv.frame = NSMakeRect(16, 12, pw - 32, dotsH)
+        sv.wantsLayer = true
+        sv.layer?.masksToBounds = true
+        tv.isEditable = false
+        hintLabel?.isHidden = true
+
+        // Dots animation
+        dotsTimer?.invalidate()
+        var tick = 0
+        dotsTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { [weak tv] _ in
+            guard let tv = tv else { return }
+            tick += 1
+            let dots = String(repeating: "·", count: (tick % 3) + 1)
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 13),
+                .foregroundColor: TC.muted
+            ]
+            tv.textStorage?.setAttributedString(NSAttributedString(string: dots, attributes: attrs))
+        }
+    }
+
+    func appendStreamChunk(_ chunk: String) {
+        answerBuffer += chunk
+    }
+
+    private var answerBuffer = ""
+
+    func finishStream() {
+        dotsTimer?.invalidate(); dotsTimer = nil
+        showAnswer(answerBuffer)
+        answerBuffer = ""
+    }
+
+    func finishStreamWithMessage(_ message: String) {
+        dotsTimer?.invalidate(); dotsTimer = nil
+        showAnswer(message)
+    }
+
+    private func showAnswer(_ text: String) {
+        guard let p = panel, let c = card, let tv = textView, let sv = scrollView else { return }
+
+        tv.textStorage?.setAttributedString(NSAttributedString(string: ""))
+
+        // Add separator
+        c.subviews.filter { $0.identifier?.rawValue == "sep" }.forEach { $0.removeFromSuperview() }
+        let sep = NSView()
+        sep.wantsLayer = true
+        sep.layer?.backgroundColor = NSColor.separatorColor.withAlphaComponent(0.3).cgColor
+        sep.identifier = NSUserInterfaceItemIdentifier("sep")
+        c.addSubview(sep)
+
+        if clickMonitor == nil {
+            clickMonitor = NSEvent.addGlobalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+                self?.close()
+            }
+        }
+
+        let qOffFromTop = quoteOffsetFromTop + 16 + 12
+        let footerH: CGFloat = 24
+        let maxAnswerH: CGFloat = 200
+
+        let paraStyle = NSMutableParagraphStyle()
+        paraStyle.lineSpacing = 3
+        let answerAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 13),
+            .foregroundColor: TC.body,
+            .paragraphStyle: paraStyle
+        ]
+        let chars = Array(text)
+        var idx = 0
+
+        streamTimer?.invalidate()
+        streamTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) {
+            [weak self, weak tv, weak sv, weak p, weak c] timer in
+            guard let self = self, let tv = tv, let sv = sv, let p = p, let c = c else {
+                timer.invalidate(); return
+            }
+            let chunkSize = max(1, chars.count / 60)
+            let end = min(idx + chunkSize, chars.count)
+            let chunk = String(chars[idx..<end])
+            tv.textStorage?.append(NSAttributedString(string: chunk, attributes: answerAttrs))
+            idx = end
+
+            tv.layoutManager?.ensureLayout(for: tv.textContainer!)
+            let usedRect = tv.layoutManager?.usedRect(for: tv.textContainer!) ?? .zero
+            let answerH = max(18, min(ceil(usedRect.height) + 10, maxAnswerH))
+            let totalH = qOffFromTop + 1 + 6 + answerH + footerH
+
+            var frame = p.frame
+            let dy = totalH - frame.size.height
+            if abs(dy) > 1 {
+                frame.origin.y -= dy
+                frame.size.height = totalH
+                p.setFrame(frame, display: true)
+                c.frame = NSMakeRect(0, 0, self.pw, totalH)
+            }
+
+            self.repositionTopElements(totalH)
+            let qY = totalH - self.quoteOffsetFromTop - 16 - 12
+            self.questionLabel?.frame = NSMakeRect(16, qY, self.pw - 32, 16)
+
+            let sepY = qY - 10
+            c.subviews.first { $0.identifier?.rawValue == "sep" }?.frame =
+                NSMakeRect(16, sepY, self.pw - 32, 0.5)
+
+            sv.frame = NSMakeRect(16, footerH, self.pw - 32, sepY - 6 - footerH)
+            sv.hasVerticalScroller = answerH >= maxAnswerH
+
+            self.hintLabel?.isHidden = false
+            self.hintLabel?.frame = NSMakeRect(self.pw - 70, 2, 60, 12)
+            self.hintLabel?.stringValue = "esc"
+            self.hintLabel?.font = NSFont.systemFont(ofSize: 10)
+            self.hintLabel?.textColor = TC.faint
+
+            tv.scrollToEndOfDocument(nil)
+
+            if idx >= chars.count {
+                timer.invalidate()
+                self.streamTimer = nil
+            }
+        }
+    }
+
+    private static func styledQuestion(_ text: String) -> NSAttributedString {
+        let aiCol = NSColor(red: 0.55, green: 0.36, blue: 0.85, alpha: 1)
+        let base: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 13),
+            .foregroundColor: TC.text
+        ]
+        let result = NSMutableAttributedString(string: text, attributes: base)
+        if text.hasPrefix("/") || text.hasPrefix("／") {
+            let slashAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 13, weight: .bold),
+                .foregroundColor: aiCol,
+                .kern: 2
+            ]
+            result.setAttributes(slashAttrs, range: NSRange(location: 0, length: 1))
+        }
+        return result
+    }
+
+    var isOpen: Bool { panel != nil }
+
+    func close() {
+        fputs("[TC] CapturePanel.close()\n", stderr)
+        dotsTimer?.invalidate(); dotsTimer = nil
+        streamTimer?.invalidate(); streamTimer = nil
+        answerPhase = false; answerBuffer = ""
+        questionLabel?.removeFromSuperview(); questionLabel = nil
+        panel?.close(); panel = nil
+        screenshotView = nil
+        ctxBoxView = nil
+        isAIMode = false
+        if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }
+        if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
     }
 
     static func truncate(_ s: String, max: Int) -> String {
