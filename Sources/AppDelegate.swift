@@ -61,21 +61,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             panel.canChooseFiles = false
             panel.canCreateDirectories = false
             panel.prompt = "Select Vault"
-            panel.message = "Choose your Obsidian vault folder"
+            panel.message = "Select your Obsidian vault root folder.\nThoughts will be saved to a \"Eureka\" subfolder inside it."
             if panel.runModal() == .OK, let url = panel.url {
-                LocalStorage.shared.vaultPath = url.path
+                let eurekaDir = url.appendingPathComponent("Eureka").path
+                try? FileManager.default.createDirectory(atPath: eurekaDir, withIntermediateDirectories: true)
+                LocalStorage.shared.vaultPath = eurekaDir
                 LocalStorage.shared.backend = "obsidian"
-                // Walk up to find vault root (.obsidian/ directory)
-                var dir = url.path
-                while dir != "/" && !dir.isEmpty {
-                    if FileManager.default.fileExists(atPath: "\(dir)/.obsidian") {
-                        let name = URL(fileURLWithPath: dir).lastPathComponent
-                        ResultBubble.vaultName = name
-                        UserDefaults.standard.set(name, forKey: "vaultName")
-                        break
-                    }
-                    dir = (dir as NSString).deletingLastPathComponent
-                }
+
+                let name = url.lastPathComponent
+                ResultBubble.vaultName = name
+                UserDefaults.standard.set(name, forKey: "vaultName")
+
+                let done = NSAlert()
+                done.messageText = "You're all set!"
+                done.informativeText = "Thoughts will be saved to:\n\(eurekaDir)\n\nTo change this later, right-click the E! menu bar icon → Settings."
+                done.addButton(withTitle: "OK")
+                done.alertStyle = .informational
+                done.runModal()
             }
         } else {
             LocalStorage.shared.backend = "notes"
