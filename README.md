@@ -4,8 +4,6 @@ A lightweight macOS menu bar app for capturing fleeting thoughts. Press a hotkey
 
 一按，一写，搞定。一键从任意界面捕获屏幕与选中文本，写入 Obsidian。
 
-![Capture demo](assets/capture-demo.png)
-
 ![Obsidian demo](assets/obsidian-demo.png)
 
 ## Features / 功能
