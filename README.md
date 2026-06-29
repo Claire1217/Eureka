@@ -1,8 +1,8 @@
 # ThoughtCapture
 
-A lightweight macOS menu bar app for capturing fleeting thoughts. Press a hotkey anywhere, type your thought, and it's saved to your Obsidian vault or Apple Notes.
+**Press a hotkey. Type a thought. Done.**
 
-一按，一写，搞定。一键从任意界面捕获屏幕与选中文本，写入 Obsidian。
+一键从任意界面捕获屏幕与选中文本，写入 Obsidian。
 
 ![Obsidian demo](assets/obsidian-demo.png)
 
