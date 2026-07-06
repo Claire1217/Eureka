@@ -32,17 +32,22 @@ class LocalStorage {
         set { UserDefaults.standard.set(newValue, forKey: "llmModel") }
     }
 
-    /// Auto-install thought-cards.css into the Obsidian vault's snippets folder
-    func installObsidianSnippet() {
-        let folder = NSString(string: vaultPath).expandingTildeInPath
+    /// Walk up from `path` to the folder containing `.obsidian`.
+    /// Returns nil if the path is not inside an Obsidian vault.
+    static func findVaultRoot(from path: String) -> String? {
         let fm = FileManager.default
-        // Walk up to find vault root
-        var dir = folder
+        var dir = NSString(string: path).expandingTildeInPath
         while dir != "/" && !dir.isEmpty {
-            if fm.fileExists(atPath: "\(dir)/.obsidian") { break }
+            if fm.fileExists(atPath: "\(dir)/.obsidian") { return dir }
             dir = (dir as NSString).deletingLastPathComponent
         }
-        guard fm.fileExists(atPath: "\(dir)/.obsidian") else { return }
+        return nil
+    }
+
+    /// Auto-install thought-cards.css into the Obsidian vault's snippets folder
+    func installObsidianSnippet() {
+        let fm = FileManager.default
+        guard let dir = LocalStorage.findVaultRoot(from: vaultPath) else { return }
 
         let snippetsDir = "\(dir)/.obsidian/snippets"
         try? fm.createDirectory(atPath: snippetsDir, withIntermediateDirectories: true)
@@ -101,17 +106,18 @@ class LocalStorage {
         let timeStr = tf.string(from: Date())
 
         let dayDir = "\(folder)/\(dateStr)"
-        try? fm.createDirectory(atPath: dayDir, withIntermediateDirectories: true)
+        do {
+            try fm.createDirectory(atPath: dayDir, withIntermediateDirectories: true)
+        } catch {
+            fputs("[Eureka] Failed to create \(dayDir): \(error)\n", stderr)
+            return (false, "")
+        }
         let fileName = "Thoughts.md"
         let filePath = "\(dayDir)/\(fileName)"
         // savedTo must be relative to vault root for obsidian:// deep links
-        var vaultRoot = folder
-        while vaultRoot != "/" && !vaultRoot.isEmpty {
-            if fm.fileExists(atPath: "\(vaultRoot)/.obsidian") { break }
-            vaultRoot = (vaultRoot as NSString).deletingLastPathComponent
-        }
         let savedTo: String
-        if filePath.hasPrefix(vaultRoot + "/") {
+        if let vaultRoot = LocalStorage.findVaultRoot(from: folder),
+           filePath.hasPrefix(vaultRoot + "/") {
             savedTo = String(filePath.dropFirst(vaultRoot.count + 1))
         } else {
             savedTo = "\(dateStr)/\(fileName)"
@@ -158,14 +164,21 @@ class LocalStorage {
         let entry = lines.joined(separator: "\n")
 
         if fm.fileExists(atPath: filePath) {
-            if let fh = FileHandle(forWritingAtPath: filePath) {
-                fh.seekToEndOfFile()
-                fh.write(entry.data(using: .utf8)!)
-                fh.closeFile()
+            guard let fh = FileHandle(forWritingAtPath: filePath) else {
+                fputs("[Eureka] Failed to open \(filePath) for writing\n", stderr)
+                return (false, savedTo)
             }
+            fh.seekToEndOfFile()
+            fh.write(entry.data(using: .utf8)!)
+            fh.closeFile()
         } else {
             let header = "# Random Thoughts \u{2014} \(dateStr)\n"
-            try? (header + entry).write(toFile: filePath, atomically: true, encoding: .utf8)
+            do {
+                try (header + entry).write(toFile: filePath, atomically: true, encoding: .utf8)
+            } catch {
+                fputs("[Eureka] Failed to write \(filePath): \(error)\n", stderr)
+                return (false, savedTo)
+            }
         }
 
         return (true, savedTo)
@@ -213,7 +226,9 @@ class LocalStorage {
             let sourceTag = !appName.isEmpty ? " <span style=\"font-style:normal;font-size:0.8em\">\u{2014} \(appName)</span>" : ""
             body += "<br><span style=\"font-style:italic;color:#8e8e93\">\(selectedText)\(sourceTag)</span>"
         }
-        let escaped = body.replacingOccurrences(of: "\"", with: "\\\"")
+        // Backslashes must be escaped before quotes, or the AppleScript breaks
+        let escaped = body.replacingOccurrences(of: "\\", with: "\\\\")
+                          .replacingOccurrences(of: "\"", with: "\\\"")
                           .replacingOccurrences(of: "\n", with: "<br>")
 
         let script = """

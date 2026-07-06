@@ -294,16 +294,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if trusted {
             let pb = NSPasteboard.general
             let oldCount = pb.changeCount
+            // Snapshot the clipboard so the synthetic Cmd+C doesn't clobber it
+            let savedItems: [NSPasteboardItem] = (pb.pasteboardItems ?? []).map { item in
+                let copy = NSPasteboardItem()
+                for type in item.types {
+                    if let data = item.data(forType: type) { copy.setData(data, forType: type) }
+                }
+                return copy
+            }
             let src = CGEventSource(stateID: .combinedSessionState)
             let down = CGEvent(keyboardEventSource: src, virtualKey: 0x08, keyDown: true)
             let up   = CGEvent(keyboardEventSource: src, virtualKey: 0x08, keyDown: false)
             down?.flags = .maskCommand; up?.flags = .maskCommand
             down?.post(tap: .cgAnnotatedSessionEventTap)
             up?.post(tap: .cgAnnotatedSessionEventTap)
-            usleep(200_000)
+            // Poll instead of a fixed sleep — usually done in ~40ms
+            var waited: UInt32 = 0
+            while pb.changeCount == oldCount && waited < 200_000 {
+                usleep(20_000); waited += 20_000
+            }
 
             if pb.changeCount != oldCount {
                 let text = pb.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                pb.clearContents()
+                pb.writeObjects(savedItems)
                 if !text.isEmpty {
                     dbg("Got context from clipboard (\(text.count) chars)")
                     return text
@@ -441,6 +455,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         req.timeoutInterval = 60
 
         let del = StreamingDelegate(panel: capturePanel, bubble: resultBubble, question: question)
+        // Cancel any in-flight request; the session retains its delegate until invalidated
+        streamSession?.invalidateAndCancel()
         streamDelegate = del
         let session = URLSession(configuration: .default, delegate: del, delegateQueue: nil)
         streamSession = session
@@ -472,6 +488,9 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
     let question: String
     private var buffer = ""
     private var fullAnswer = ""
+    private var statusCode = 0
+    private var errorBody = ""
+    private var finished = false
 
     init(panel: CapturePanel?, bubble: ResultBubble?, question: String) {
         self.panel = panel
@@ -480,8 +499,20 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
     }
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
+                    didReceive response: URLResponse,
+                    completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        completionHandler(.allow)
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
                     didReceive data: Data) {
         guard let chunk = String(data: data, encoding: .utf8) else { return }
+        // Non-200 responses are plain JSON errors, not SSE — collect for didComplete
+        if statusCode != 200 {
+            errorBody += chunk
+            return
+        }
         buffer += chunk
 
         while let lineEnd = buffer.firstIndex(of: "\n") {
@@ -492,7 +523,8 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
             let payload = String(line.dropFirst(6))
             if payload == "[DONE]" {
                 DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
+                    guard let self = self, !self.finished else { return }
+                    self.finished = true
                     self.panel?.finishStream()
                     fputs("[Eureka] DeepSeek stream done: \(self.fullAnswer.prefix(80))...\n", stderr)
                 }
@@ -514,11 +546,28 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
 
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     didCompleteWithError error: Error?) {
-        if let err = error {
-            DispatchQueue.main.async { [weak self] in
+        defer { session.finishTasksAndInvalidate() }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, !self.finished else { return }
+            self.finished = true
+            if let err = error {
+                if (err as NSError).code == NSURLErrorCancelled { return }
                 fputs("[Eureka] DeepSeek stream error: \(err.localizedDescription)\n", stderr)
-                self?.panel?.appendStreamChunk("\n⚠️ \(err.localizedDescription)")
-                self?.panel?.finishStream()
+                self.panel?.appendStreamChunk("\n⚠️ \(err.localizedDescription)")
+                self.panel?.finishStream()
+            } else if self.statusCode != 200 {
+                var msg = self.errorBody
+                if let data = self.errorBody.data(using: .utf8),
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let apiError = json["error"] as? [String: Any],
+                   let m = apiError["message"] as? String {
+                    msg = m
+                }
+                fputs("[Eureka] DeepSeek HTTP \(self.statusCode): \(msg)\n", stderr)
+                self.panel?.finishStreamWithMessage("⚠️ API error (HTTP \(self.statusCode))\n\(msg.prefix(300))")
+            } else {
+                // Stream ended without [DONE] — show whatever arrived
+                self.panel?.finishStream()
             }
         }
     }

@@ -65,15 +65,18 @@ class SelectionToolbar {
 
     private func show(at mousePos: NSPoint, selectedText: String) {
         dismiss()
-        guard let screen = NSScreen.main else { return }
+        // Use the screen the mouse is on, not NSScreen.main — they differ on multi-monitor setups
+        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mousePos, $0.frame, false) })
+                ?? NSScreen.main else { return }
+        let vis = screen.visibleFrame
 
         // Position: slightly below and right of mouse
         var x = mousePos.x + 8
         var y = mousePos.y - toolbarH - 8
 
         // Keep on screen
-        if x + toolbarW > screen.frame.maxX - 10 { x = mousePos.x - toolbarW - 8 }
-        if y < screen.frame.minY + 10 { y = mousePos.y + 8 }
+        if x + toolbarW > vis.maxX - 10 { x = mousePos.x - toolbarW - 8 }
+        if y < vis.minY + 10 { y = mousePos.y + 8 }
 
         let win = NSWindow(contentRect: NSMakeRect(x, y, toolbarW, toolbarH),
                            styleMask: [.borderless], backing: .buffered, defer: false)

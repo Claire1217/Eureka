@@ -43,7 +43,9 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
               completion: @escaping (String) -> Void) {
         onSubmit = completion
         close()
-        guard let screen = NSScreen.main else { return }
+        // Use the screen the mouse is on, not NSScreen.main — they differ on multi-monitor setups
+        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(anchorPoint, $0.frame, false) })
+                ?? NSScreen.main else { return }
 
         hasQuote = !selectedText.isEmpty
         quotedText = selectedText
@@ -54,11 +56,13 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         let ph: CGFloat = topRegionH + baseInputH + 14 + thumbH
         anchorY = anchorPoint.y
 
-        // Position below the mouse
+        // Position below the mouse, clamped with global screen coordinates
+        // (non-main screens don't start at 0,0)
+        let vis = screen.visibleFrame
         var px = anchorPoint.x - pw / 2
         var py = anchorPoint.y - ph - 10
-        px = max(12, min(px, screen.frame.width - pw - 12))
-        py = max(12, min(py, screen.frame.height - ph - 12))
+        px = max(vis.minX + 12, min(px, vis.maxX - pw - 12))
+        py = max(vis.minY + 12, min(py, vis.maxY - ph - 12))
 
         let p = KeyPanel(contentRect: NSMakeRect(px, py, pw, ph),
                          styleMask: [.borderless], backing: .buffered, defer: false)

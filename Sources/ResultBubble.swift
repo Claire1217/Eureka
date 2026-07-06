@@ -367,8 +367,12 @@ class ResultBubble {
                 statusLabel?.textColor = .secondaryLabelColor
                 statusLabel?.stringValue = "Testing…"
 
-                let base = LocalStorage.shared.llmApiBase
-                let url = URL(string: "\(base)/chat/completions")!
+                // llmApiBase already includes the /chat/completions path
+                guard let url = URL(string: LocalStorage.shared.llmApiBase) else {
+                    statusLabel?.textColor = .systemRed
+                    statusLabel?.stringValue = "✗ Invalid API base URL"
+                    return
+                }
                 var req = URLRequest(url: url)
                 req.httpMethod = "POST"
                 req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
@@ -543,18 +547,8 @@ class ResultBubble {
                 if !apiKey.isEmpty {
                     LocalStorage.shared.llmApiKey = apiKey
                 }
-                // Find vault root by walking up to the folder containing .obsidian/
-                let expanded = NSString(string: vaultPath).expandingTildeInPath
-                var dir = expanded
-                var foundVault = ""
-                while dir != "/" && !dir.isEmpty {
-                    if FileManager.default.fileExists(atPath: "\(dir)/.obsidian") {
-                        foundVault = URL(fileURLWithPath: dir).lastPathComponent
-                        break
-                    }
-                    dir = (dir as NSString).deletingLastPathComponent
-                }
-                if !foundVault.isEmpty {
+                if let root = LocalStorage.findVaultRoot(from: vaultPath) {
+                    let foundVault = URL(fileURLWithPath: root).lastPathComponent
                     ResultBubble.vaultName = foundVault
                     UserDefaults.standard.set(foundVault, forKey: "vaultName")
                 }
@@ -779,8 +773,14 @@ class ResultBubble {
         if let name = UserDefaults.standard.string(forKey: "vaultName"), !name.isEmpty {
             return name
         }
+        // vaultPath usually points at a subfolder inside the vault (e.g. .../MyVault/Eureka),
+        // so derive the vault name from the folder containing .obsidian/ — the raw
+        // lastPathComponent breaks obsidian:// links for CLI-configured setups
         let vaultPath = LocalStorage.shared.vaultPath
         if !vaultPath.isEmpty {
+            if let root = LocalStorage.findVaultRoot(from: vaultPath) {
+                return URL(fileURLWithPath: root).lastPathComponent
+            }
             return URL(fileURLWithPath: vaultPath).lastPathComponent
         }
         return "obsidian"
