@@ -67,6 +67,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 try? FileManager.default.createDirectory(atPath: eurekaDir, withIntermediateDirectories: true)
                 LocalStorage.shared.vaultPath = eurekaDir
                 LocalStorage.shared.backend = "obsidian"
+                // Styled cards from the first thought on, not only after a Settings save
+                LocalStorage.shared.installObsidianSnippet()
 
                 let name = url.lastPathComponent
                 ResultBubble.vaultName = name
@@ -74,7 +76,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                 let done = NSAlert()
                 done.messageText = "You're all set!"
-                done.informativeText = "Thoughts will be saved to:\n\(eurekaDir)\n\nTo change this later, right-click the E! menu bar icon → Settings."
+                done.informativeText = "Thoughts will be saved to:\n\(eurekaDir)\n\nTo change this later, click the E! menu bar icon → Settings."
                 done.addButton(withTitle: "OK")
                 done.alertStyle = .informational
                 done.runModal()
@@ -87,28 +89,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func setupSelectionToolbar() {
         selectionToolbar = SelectionToolbar()
 
-        // Pin: save selected text directly as thought
-        selectionToolbar?.onPin = { [weak self] text in
-            self?.sendToServer(thought: text, selectedText: "",
-                               appName: NSWorkspace.shared.frontmostApplication?.localizedName ?? "Unknown",
-                               windowTitle: self?.getWindowTitle() ?? "",
-                               browserURL: "")
-        }
-
-        // Expand: open capture panel with selected text
+        // Click the dot: open capture panel with selected text
         selectionToolbar?.onExpand = { [weak self] text, pos in
             guard let self = self else { return }
             self.prevAppBundleId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
             let appName = NSWorkspace.shared.frontmostApplication?.localizedName ?? "Unknown"
-            let windowTitle = self.getWindowTitle()
             let browserURL = self.getBrowserURL(appName: appName)
-            let editable = self.lastSelectionEditable
-
             if self.capturePanel == nil { self.capturePanel = CapturePanel() }
             self.capturePanel?.show(selectedText: text, anchorPoint: pos) { [weak self] thought in
-                self?.sendToServer(thought: thought, selectedText: text,
-                                   appName: appName, windowTitle: windowTitle,
-                                   browserURL: browserURL, editable: editable)
+                self?.saveThought(thought: thought, selectedText: text,
+                                  appName: appName, browserURL: browserURL)
             }
         }
 
@@ -121,24 +111,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.title = "E!"
 
+        rebuildMenu()
+    }
+
+    /// Rebuilt after Settings are saved so the hotkey labels stay current.
+    func rebuildMenu() {
         let menu = NSMenu()
         let captureItem = NSMenuItem(title: "Capture Thought (\(captureHotkeyLabel))",
                                      action: #selector(triggerCapture), keyEquivalent: "")
         captureItem.target = self
         menu.addItem(captureItem)
-        let screenshotItem = NSMenuItem(title: "Screenshot + Comment (⌥R)",
+        let screenshotItem = NSMenuItem(title: "Screenshot + Comment (\(screenshotHotkeyLabel))",
                                         action: #selector(triggerScreenshot), keyEquivalent: "")
         screenshotItem.target = self
         menu.addItem(screenshotItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)),
+        let settingsItem = NSMenuItem(title: "Settings…", action: #selector(openSettings),
+                                      keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Quit Eureka", action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: "q"))
         statusItem.menu = menu
+    }
+
+    @objc func openSettings() {
+        resultBubble?.openSettingsWindow()
     }
 
     // MARK: Global Hotkey (Carbon)
 
     private var eventHandlerInstalled = false
+    /// True when the last registerHotkey() could not claim one of the combinations.
+    private(set) var hotkeyRegistrationFailed = false
 
     func registerHotkey() {
         // Unregister old hotkeys if re-registering
@@ -163,14 +169,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var hotKeyID1 = EventHotKeyID()
         hotKeyID1.signature = OSType(0x54435F48)
         hotKeyID1.id = 1
-        RegisterEventHotKey(captureKey, captureMods, hotKeyID1,
-                            GetApplicationEventTarget(), 0, &hotKeyRef)
+        let s1 = RegisterEventHotKey(captureKey, captureMods, hotKeyID1,
+                                     GetApplicationEventTarget(), 0, &hotKeyRef)
 
         var hotKeyID2 = EventHotKeyID()
         hotKeyID2.signature = OSType(0x54435F48)
         hotKeyID2.id = 2
-        RegisterEventHotKey(screenshotKey, screenshotMods, hotKeyID2,
-                            GetApplicationEventTarget(), 0, &hotKeyScreenshotRef)
+        let s2 = RegisterEventHotKey(screenshotKey, screenshotMods, hotKeyID2,
+                                     GetApplicationEventTarget(), 0, &hotKeyScreenshotRef)
+        // e.g. eventHotKeyExistsErr when another app already owns the combination
+        hotkeyRegistrationFailed = (s1 != noErr || s2 != noErr)
+        if s1 != noErr { fputs("[Eureka] Failed to register capture hotkey (OSStatus \(s1))\n", stderr) }
+        if s2 != noErr { fputs("[Eureka] Failed to register screenshot hotkey (OSStatus \(s2))\n", stderr) }
     }
 
     // MARK: Capture Flow
@@ -181,16 +191,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let mousePos = NSEvent.mouseLocation
         let selectedText = getSelectedText()
-        let editable = lastSelectionEditable
         let appName = prevApp?.localizedName ?? "Unknown"
-        let windowTitle = getWindowTitle()
         let browserURL = getBrowserURL(appName: appName)
 
         if capturePanel == nil { capturePanel = CapturePanel() }
         capturePanel?.show(selectedText: selectedText, anchorPoint: mousePos) { [weak self] thought in
-            self?.sendToServer(thought: thought, selectedText: selectedText,
-                               appName: appName, windowTitle: windowTitle, browserURL: browserURL,
-                               editable: editable)
+            self?.saveThought(thought: thought, selectedText: selectedText,
+                              appName: appName, browserURL: browserURL)
         }
     }
 
@@ -199,7 +206,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func triggerScreenshot() {
         let prevApp = NSWorkspace.shared.frontmostApplication
         let appName = prevApp?.localizedName ?? "Unknown"
-        let windowTitle = getWindowTitle()
         let browserURL = getBrowserURL(appName: appName)
 
         let timestamp = Int(Date().timeIntervalSince1970 * 1000)
@@ -233,9 +239,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if self?.capturePanel == nil { self?.capturePanel = CapturePanel() }
                 self?.capturePanel?.show(selectedText: "", anchorPoint: mousePos,
                                         screenshotPath: tmpPath) { thought in
-                    self?.sendToServer(thought: thought, selectedText: "",
-                                       appName: appName, windowTitle: windowTitle,
-                                       browserURL: browserURL, screenshotPath: tmpPath)
+                    self?.saveThought(thought: thought, selectedText: "",
+                                      appName: appName, browserURL: browserURL,
+                                      screenshotPath: tmpPath)
                 }
             }
         }
@@ -325,13 +331,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Fallback: read clipboard directly (user can Cmd+C before ⌥T)
-        let clipText = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !clipText.isEmpty && clipText.count < 2000 {
-            dbg("Got context from clipboard fallback (\(clipText.count) chars)")
-            return clipText
-        }
-
+        // No fallback to the existing clipboard: whatever the user copied earlier
+        // (passwords, addresses…) is unrelated to this thought and must not be saved.
         dbg("No selected text found")
         return ""
     }
@@ -348,12 +349,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         default: return ""
         }
         return runOsascript(script)
-    }
-
-    func getWindowTitle() -> String {
-        return runOsascript(
-            "tell application \"System Events\" to get name of first window " +
-            "of (first process whose frontmost is true)")
     }
 
     private func runOsascript(_ script: String) -> String {
@@ -381,38 +376,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Save Thought
 
-    func sendToServer(thought: String, selectedText: String,
-                      appName: String, windowTitle: String, browserURL: String,
-                      editable: Bool = false, screenshotPath: String? = nil) {
+    func saveThought(thought: String, selectedText: String,
+                     appName: String, browserURL: String,
+                     screenshotPath: String? = nil) {
         let cleanThought = thought
 
         // Any "/" prefix → DeepSeek quick Q&A (streaming in panel)
         if cleanThought.hasPrefix("/") || cleanThought.hasPrefix("／") {
             let stripped = String(cleanThought.drop(while: { $0 == "/" || $0 == "／" }))
-            // Also strip known prefixes like 问/ask
-            var question = stripped
+            // Also strip an explicit "ask " / "问 " command word — only when it is
+            // followed by whitespace, so "/asking price" and "/问题是…" stay intact
+            var question = stripped.trimmingCharacters(in: .whitespaces)
             for p in ["问", "ask"] {
-                if question.hasPrefix(p) {
-                    question = String(question.dropFirst(p.count))
+                let rest = question.dropFirst(p.count)
+                if question.lowercased().hasPrefix(p), let next = rest.first, next.isWhitespace {
+                    question = String(rest)
                     break
                 }
             }
             question = question.trimmingCharacters(in: .whitespaces)
-            if question.isEmpty { return }
+            if question.isEmpty || ["ask", "问"].contains(question.lowercased()) { return }
             capturePanel?.showStreamingAnswer()
             askDeepSeekStreaming(question: question, context: selectedText)
             return
         }
-        if cleanThought.isEmpty && selectedText.isEmpty { return }
+        if cleanThought.isEmpty && selectedText.isEmpty && screenshotPath == nil { return }
 
-        let result = LocalStorage.shared.save(
-            thought: cleanThought, selectedText: selectedText,
-            appName: appName, browserURL: browserURL,
-            screenshotPath: screenshotPath)
-
+        // Enter on an empty input submits the quote itself as the thought —
+        // don't write the same text again as its own context.
+        let quote = (selectedText == cleanThought) ? "" : selectedText
 
         capturePanel?.close()
-        resultBubble?.addItem(text: cleanThought, savedTo: result.savedTo, ok: result.ok)
+
+        // Off the main thread: the Apple Notes backend shells out to osascript and
+        // can take seconds. The queue is serial, so entries keep their order.
+        saveQueue.async { [weak self] in
+            let result = LocalStorage.shared.save(
+                thought: cleanThought, selectedText: quote,
+                appName: appName, browserURL: browserURL,
+                screenshotPath: screenshotPath)
+            DispatchQueue.main.async {
+                // A screenshot may be saved without a comment
+                let label = cleanThought.isEmpty ? "Screenshot" : cleanThought
+                self?.resultBubble?.addItem(text: label, savedTo: result.savedTo, ok: result.ok)
+            }
+        }
+    }
+
+    private let saveQueue = DispatchQueue(label: "com.eureka.app.save", qos: .userInitiated)
+
+    /// Saves are asynchronous — let an in-flight one finish before quitting.
+    func applicationWillTerminate(_ notification: Notification) {
+        saveQueue.sync {}
     }
 
     private var streamSession: URLSession?
@@ -427,16 +442,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !apiKey.isEmpty else {
             fputs("[Eureka] DeepSeek API key not set\n", stderr)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.capturePanel?.finishStreamWithMessage("API key 未设置\n\n右键菜单栏 E! → Settings → 填入 DeepSeek API key\n获取: platform.deepseek.com")
+                self?.capturePanel?.finishStreamWithMessage("API key 未设置\n\n点击菜单栏 E! → Settings → 填入 DeepSeek API key\n获取: platform.deepseek.com")
             }
             return
         }
 
         var messages: [[String: String]] = [
-            ["role": "system", "content": "你是一个简洁的助手。用中英混合回答，技术术语用英文。回答控制在200字以内。"]
+            ["role": "system", "content": storage.llmSystemPrompt]
         ]
         if !context.isEmpty {
-            messages.append(["role": "user", "content": "参考内容：\n\(context)\n\n问题：\(question)"])
+            messages.append(["role": "user", "content": "Context:\n\(context)\n\nQuestion: \(question)"])
         } else {
             messages.append(["role": "user", "content": question])
         }

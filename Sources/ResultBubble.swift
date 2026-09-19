@@ -184,7 +184,7 @@ class ResultBubble {
         }
         settingsTargets.removeAll()
 
-        let W: CGFloat = 420, H: CGFloat = 500
+        let W: CGFloat = 420, H: CGFloat = 540
         let win = NSWindow(contentRect: NSMakeRect(0, 0, W, H),
                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
         win.title = "Eureka Settings"
@@ -493,17 +493,29 @@ class ResultBubble {
         root.addSubview(ssKeyPop)
         y -= 30
 
+        // Selection dot toggle
+        let dotCheck = NSButton(checkboxWithTitle: "Show capture dot after selecting text",
+                                target: nil, action: nil)
+        dotCheck.font = .systemFont(ofSize: 12)
+        dotCheck.state = SelectionToolbar.isEnabled ? .on : .off
+        dotCheck.identifier = NSUserInterfaceItemIdentifier("selDot")
+        dotCheck.frame = NSMakeRect(px, y - 22, fw, 18)
+        root.addSubview(dotCheck)
+        y -= 30
+
         // ━━━━━  ABOUT  ━━━━━
         sep(at: &y)
         sectionTitle("ABOUT", at: &y)
 
-        infoRow("Version:", "1.0", at: &y)
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "dev"
+        infoRow("Version:", version, at: &y)
 
         // ━━━━━  Bottom bar  ━━━━━
         let statusLabel = NSTextField(labelWithString: "")
         statusLabel.font = .systemFont(ofSize: 11)
         statusLabel.textColor = .systemGreen
-        statusLabel.frame = NSMakeRect(px, 17, 200, 14)
+        statusLabel.frame = NSMakeRect(px, 17, fw - 84, 14)
         statusLabel.identifier = NSUserInterfaceItemIdentifier("status")
         root.addSubview(statusLabel)
 
@@ -544,8 +556,18 @@ class ResultBubble {
 
                 LocalStorage.shared.vaultPath = vaultPath
                 LocalStorage.shared.backend = backend
-                if !apiKey.isEmpty {
-                    LocalStorage.shared.llmApiKey = apiKey
+                // Always write, so clearing the field really removes the key
+                LocalStorage.shared.llmApiKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                func checkbox(in view: NSView, id: String) -> NSButton? {
+                    for sub in view.subviews {
+                        if let b = sub as? NSButton, b.identifier?.rawValue == id { return b }
+                        if let found = checkbox(in: sub, id: id) { return found }
+                    }
+                    return nil
+                }
+                if let dot = checkbox(in: root, id: "selDot") {
+                    SelectionToolbar.isEnabled = (dot.state == .on)
                 }
                 if let root = LocalStorage.findVaultRoot(from: vaultPath) {
                     let foundVault = URL(fileURLWithPath: root).lastPathComponent
@@ -591,13 +613,21 @@ class ResultBubble {
                 if let k = popupTitle(in: root, id: "ssKey"), let code = keyMap[k] {
                     UserDefaults.standard.set(code, forKey: "hotkeyScreenshot")
                 }
+                var hotkeyFailed = false
                 if let delegate = NSApp.delegate as? AppDelegate {
                     delegate.registerHotkey()
+                    delegate.rebuildMenu()
+                    hotkeyFailed = delegate.hotkeyRegistrationFailed
                 }
 
                 let status = textField(in: root, id: "status")
-                status?.textColor = .systemGreen
-                status?.stringValue = "✓ Saved"
+                if hotkeyFailed {
+                    status?.textColor = .systemOrange
+                    status?.stringValue = "Saved — but a hotkey could not be registered"
+                } else {
+                    status?.textColor = .systemGreen
+                    status?.stringValue = "✓ Saved"
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     status?.stringValue = ""
                 }
@@ -815,8 +845,10 @@ class ResultBubble {
         if let url = URL(string: "obsidian://open?vault=\(vaultName)&file=\(encoded)") {
             NSWorkspace.shared.open(url)
         }
-        if !searchText.isEmpty {
-            let query = String(searchText.prefix(30))
+        if !searchText.isEmpty && searchText != "Screenshot" {
+            // First line only — a quoted search phrase cannot span lines
+            let firstLine = searchText.components(separatedBy: "\n").first ?? searchText
+            let query = String(firstLine.prefix(30))
             let searchQuery = "path:\"\(file)\" \"\(query)\""
             if let sq = searchQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                let searchUrl = URL(string: "obsidian://search?vault=\(vaultName)&query=\(sq)") {
@@ -828,8 +860,8 @@ class ResultBubble {
     }
 
     static func openInNotes(searchText: String = "") {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        let dateStr = f.string(from: Date())
+        // Same formatter as the save path, or the titles disagree on non-Gregorian calendars
+        let dateStr = LocalStorage.stamp("yyyy-MM-dd")
         let noteTitle = "Thoughts — \(dateStr)"
         let script = """
         tell application "Notes"

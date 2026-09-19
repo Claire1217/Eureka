@@ -21,5 +21,4 @@ server.py
 global_capture.py
 test_server.py
 capture.sh
-bubbleicon2.png
-bubbleicon3.png
+bubbleicon*.png

@@ -3,10 +3,15 @@
 # Usage: curl -fsSL https://raw.githubusercontent.com/Claire1217/Eureka/main/install.sh | bash
 #
 # Optional env vars (set before piping):
-#   TC_VAULT_PATH   — Obsidian folder path, e.g. ~/Documents/vault/01_daily
-#   TC_BACKEND      — "obsidian" (default) or "notes"
-#   TC_API_KEY      — DeepSeek API key for /AI answers
+#   EUREKA_VAULT_PATH — Obsidian folder path, e.g. ~/Documents/vault/Eureka
+#   EUREKA_BACKEND    — "obsidian" (default) or "notes"
+#   EUREKA_API_KEY    — API key for / AI answers (DeepSeek by default)
+# (The old TC_* names still work.)
 set -e
+
+TC_VAULT_PATH="${EUREKA_VAULT_PATH:-$TC_VAULT_PATH}"
+TC_BACKEND="${EUREKA_BACKEND:-$TC_BACKEND}"
+TC_API_KEY="${EUREKA_API_KEY:-$TC_API_KEY}"
 
 echo "[Eureka] Downloading latest release..."
 DOWNLOAD_URL=$(curl -fsSL https://api.github.com/repos/Claire1217/Eureka/releases/latest \
@@ -51,5 +56,5 @@ echo "MANUAL STEP REQUIRED:"
 echo "  System Settings → Privacy & Security → Accessibility → enable Eureka"
 echo ""
 if [ -z "$TC_VAULT_PATH" ]; then
-    echo "Then: right-click E! menu bar icon → Settings → choose save folder"
+    echo "Then: click the E! menu bar icon → Settings → choose save folder"
 fi

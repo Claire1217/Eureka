@@ -1,7 +1,8 @@
 import Cocoa
 
 /// Minimal floating toolbar that appears when text is selected.
-/// Two actions: pin (save directly) and expand (open capture panel).
+/// A single small blue dot, nothing else: click it to open the capture panel with the selection attached.
+/// Can be turned off in Settings (UserDefaults key "selectionToolbarEnabled").
 class SelectionToolbar {
     private var window: NSWindow?
     private var mouseDownPos: NSPoint?
@@ -9,11 +10,11 @@ class SelectionToolbar {
     private var mouseUpMonitor: Any?
     private var hideTimer: Timer?
 
-    var onPin: ((String) -> Void)?      // direct save
     var onExpand: ((String, NSPoint) -> Void)?  // open capture panel
 
-    private let toolbarW: CGFloat = 68
-    private let toolbarH: CGFloat = 28
+    private let dotSize: CGFloat = 14
+    private let toolbarW: CGFloat = 24   // dot + room for its shadow
+    private let toolbarH: CGFloat = 24
 
     func startMonitoring() {
         // Track mouseDown position to distinguish click vs drag-select
@@ -40,7 +41,14 @@ class SelectionToolbar {
         }
     }
 
+    /// Defaults to on; users can disable the dot in Settings.
+    static var isEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "selectionToolbarEnabled") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "selectionToolbarEnabled") }
+    }
+
     private func checkAndShow(at pos: NSPoint) {
+        guard SelectionToolbar.isEnabled else { return }
         // Don't show if capture panel is open
         if let delegate = NSApp.delegate as? AppDelegate,
            delegate.capturePanel?.isOpen == true { return }
@@ -85,21 +93,14 @@ class SelectionToolbar {
         win.backgroundColor = .clear
         win.hasShadow = false
 
+        // Just the dot: a transparent window with nothing but the small blue circle
         let container = NSView(frame: NSMakeRect(0, 0, toolbarW, toolbarH))
         container.wantsLayer = true
-        container.layer?.cornerRadius = toolbarH / 2
-        container.layer?.backgroundColor = NSColor(white: 1, alpha: 0.95).cgColor
-        container.layer?.shadowColor = NSColor.black.cgColor
-        container.layer?.shadowOpacity = 0.12
-        container.layer?.shadowRadius = 10
-        container.layer?.shadowOffset = CGSize(width: 0, height: -2)
-        container.layer?.borderWidth = 0.5
-        container.layer?.borderColor = NSColor(white: 0, alpha: 0.06).cgColor
+        container.layer?.backgroundColor = NSColor.clear.cgColor
 
-        // Expand button (colored dot — same palette as bubble)
-        let dotBtn = ClickableRow(frame: NSMakeRect(4, 4, toolbarH - 8, toolbarH - 8))
+        let inset = (toolbarH - dotSize) / 2
+        let dotBtn = ClickableRow(frame: NSMakeRect(inset, inset, dotSize, dotSize))
         let dotLayer = CAGradientLayer()
-        let dotSize = toolbarH - 8
         dotLayer.frame = CGRect(x: 0, y: 0, width: dotSize, height: dotSize)
         dotLayer.cornerRadius = dotSize / 2
         dotLayer.colors = [
@@ -110,6 +111,12 @@ class SelectionToolbar {
         dotLayer.endPoint = CGPoint(x: 0.5, y: 0.0)
         dotBtn.wantsLayer = true
         dotBtn.layer?.cornerRadius = dotSize / 2
+        dotBtn.layer?.masksToBounds = false
+        // Soft shadow so the dot stays visible on any background
+        dotBtn.layer?.shadowColor = NSColor.black.cgColor
+        dotBtn.layer?.shadowOpacity = 0.18
+        dotBtn.layer?.shadowRadius = 3
+        dotBtn.layer?.shadowOffset = CGSize(width: 0, height: -1)
         dotBtn.layer?.addSublayer(dotLayer)
         let text = selectedText
         let pos = mousePos
@@ -118,18 +125,6 @@ class SelectionToolbar {
             self?.onExpand?(text, pos)
         }
         container.addSubview(dotBtn)
-
-        // Pin button
-        let pinBtn = ClickableRow(frame: NSMakeRect(toolbarW / 2 + 2, 0, toolbarW / 2 - 4, toolbarH))
-        let pinLabel = NSTextField(labelWithString: "📌")
-        pinLabel.font = NSFont.systemFont(ofSize: 13)
-        pinLabel.frame = NSMakeRect((pinBtn.frame.width - 20) / 2, (toolbarH - 18) / 2, 20, 18)
-        pinBtn.addSubview(pinLabel)
-        pinBtn.onClick = { [weak self] in
-            self?.dismiss()
-            self?.onPin?(text)
-        }
-        container.addSubview(pinBtn)
 
         win.contentView = container
 

@@ -229,10 +229,8 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         // Command mode visual feedback
         let text = tv.string
         let isCmd = text.hasPrefix("/") || text.hasPrefix("／")
-                    || text.lowercased().hasPrefix("@claude")
-        let isAtClaude = text.lowercased().hasPrefix("@claude")
         if isCmd {
-            hintLabel?.stringValue = isAtClaude ? "↵ @claude · esc" : "↵ ask AI · esc"
+            hintLabel?.stringValue = "↵ ask AI · esc"
             hintLabel?.textColor = aiColor
             if !isAIMode {
                 isAIMode = true
@@ -248,11 +246,11 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
                 let full = NSMutableAttributedString(attributedString: tv.attributedString())
                 let range = NSRange(location: 0, length: full.length)
                 full.addAttribute(.foregroundColor, value: aiColor, range: range)
-                let prefixLen = isAtClaude ? min(7, full.length) : min(1, full.length)
+                let prefixLen = min(1, full.length)
                 if prefixLen > 0 {
                     let prefixRange = NSRange(location: 0, length: prefixLen)
                     full.addAttribute(.font, value: NSFont.systemFont(ofSize: 13, weight: .bold), range: prefixRange)
-                    full.addAttribute(.kern, value: isAtClaude ? 1 : 3, range: prefixRange)
+                    full.addAttribute(.kern, value: 3, range: prefixRange)
                 }
                 tv.textStorage?.setAttributedString(full)
                 updatingStyle = false
@@ -304,8 +302,8 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         let typed = textView?.string
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let text = typed.isEmpty ? quotedText : typed
-        guard !text.isEmpty else { close(); return }
-        fputs("[Eureka] submit: \(text)\n", stderr)
+        // A screenshot is worth saving even without a comment
+        guard !text.isEmpty || hasScreenshot else { close(); return }
         let isAI = text.hasPrefix("/") || text.hasPrefix("／")
         if !isAI {
             close()
