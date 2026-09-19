@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" role="img" aria-label="Eureka 截图捕获：按 Option+R，框选一块区域，写一句话，回车。截图和评论会作为同一张卡片保存。">
+<defs>
+  <style>.t{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Helvetica Neue",Arial,sans-serif}@keyframes hk{0.00%{opacity:0;transform:translateY(8px)}3.32%{opacity:0;transform:translateY(8px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}5.56%{opacity:1;transform:translateY(0)}8.33%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.2,1)}9.44%{opacity:1;transform:translateY(4px)}11.67%{opacity:1;transform:translateY(0)}15.00%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.45,0,.25,1)}18.33%{opacity:0;transform:translateY(0)}100.00%{opacity:0;transform:translateY(0)}}.hk{animation:hk 9.0s linear infinite}@keyframes ret{0.00%{opacity:0;transform:translateY(8px)}56.66%{opacity:0;transform:translateY(8px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}58.89%{opacity:1;transform:translateY(0)}60.00%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.2,1)}61.11%{opacity:1;transform:translateY(4px)}63.33%{opacity:1;transform:translateY(0)}66.11%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.45,0,.25,1)}69.44%{opacity:0;transform:translateY(0)}100.00%{opacity:0;transform:translateY(0)}}.ret{animation:ret 9.0s linear infinite}@keyframes cur{0.00%{transform:translate(330px,250px);opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}16.67%{transform:translate(120px,98px);opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}27.78%{transform:translate(440px,238px);opacity:1}31.11%{transform:translate(440px,238px);opacity:0}93.33%{transform:translate(330px,250px);opacity:0;animation-timing-function:cubic-bezier(.45,0,.25,1)}100.00%{transform:translate(330px,250px);opacity:1}}.cur{animation:cur 9.0s linear infinite}@keyframes marquee{0.00%{transform:scale(0);opacity:0}16.66%{transform:scale(0);opacity:0}16.67%{transform:scale(0);opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}27.78%{transform:scale(1);opacity:1}29.44%{transform:scale(1);opacity:1}32.22%{transform:scale(1);opacity:0}100.00%{transform:scale(1);opacity:0}}.marquee{animation:marquee 9.0s linear infinite}@keyframes flash{0.00%{opacity:0}28.89%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}30.00%{opacity:0.7;animation-timing-function:cubic-bezier(.45,0,.25,1)}33.33%{opacity:0}100.00%{opacity:0}}.flash{animation:flash 9.0s linear infinite}@keyframes panel{0.00%{opacity:0;transform:translateY(10px) scale(.96)}31.10%{opacity:0;transform:translateY(10px) scale(.96);animation-timing-function:cubic-bezier(.2,.8,.2,1)}34.44%{opacity:1;transform:translateY(0) scale(1)}62.22%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.45,0,.25,1)}65.00%{opacity:0;transform:translateY(-6px) scale(.98)}100.00%{opacity:0;transform:translateY(-6px) scale(.98)}}.panel{animation:panel 9.0s linear infinite}@keyframes ph{0.00%{opacity:0}31.10%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}34.44%{opacity:1}37.22%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}37.78%{opacity:0}100.00%{opacity:0}}.ph{animation:ph 9.0s linear infinite}@keyframes wipe{0.00%{transform:translateX(0)}37.78%{transform:translateX(0)}55.56%{transform:translateX(202px)}65.56%{transform:translateX(202px)}65.67%{transform:translateX(0)}100.00%{transform:translateX(0)}}.wipe{animation:wipe 9.0s linear infinite}@keyframes card{0.00%{opacity:0;transform:translateY(20px) scale(.97)}64.43%{opacity:0;transform:translateY(20px) scale(.97);animation-timing-function:cubic-bezier(.3,1.5,.5,1)}70.56%{opacity:1;transform:translateY(0) scale(1)}93.33%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.45,0,.25,1)}97.78%{opacity:0;transform:translateY(0) scale(1)}100.00%{opacity:0;transform:translateY(0) scale(1)}}.card{animation:card 9.0s linear infinite}.hk,.ret,.panel,.ph,.marquee,.flash,.cur{opacity:0}
+  @keyframes blink{0%,55%{opacity:1}56%,100%{opacity:0}}.caret{animation:blink 1s steps(1) infinite}
+  @keyframes dot{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  .d1{animation:dot 1.2s infinite}.d2{animation:dot 1.2s .2s infinite}.d3{animation:dot 1.2s .4s infinite}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}</style>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eefaf4"/><stop offset=".55" stop-color="#f3f6ff"/><stop offset="1" stop-color="#f7f1ff"/></linearGradient>
+  <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecf9f2"/><stop offset="1" stop-color="#e3f3ef"/></linearGradient>
+  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6180d9" stop-opacity=".22"/><stop offset="1" stop-color="#6180d9" stop-opacity="0"/></linearGradient>
+  <filter id="winShadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#5b5b8a" flood-opacity=".16"/></filter>
+  <filter id="panelShadow" x="-15%" y="-30%" width="130%" height="170%"><feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#2b2b55" flood-opacity=".24"/></filter>
+  <filter id="aiShadow" x="-15%" y="-30%" width="130%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#8c5cd9" flood-opacity=".30"/></filter>
+  <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="45"/></filter>
+  <clipPath id="frame"><rect width="600" height="420" rx="22"/></clipPath>
+</defs>
+<g clip-path="url(#frame)">
+  <rect width="600" height="420" fill="url(#bg)"/>
+  <circle cx="90" cy="60" r="110" fill="#99e6bf" opacity=".28" filter="url(#blur)"/><circle cx="540" cy="380" r="120" fill="#8cc7f2" opacity=".26" filter="url(#blur)"/>
+  
+  
+<g transform="translate(30,26)">
+  <rect width="540" height="300" rx="13" fill="#fff" filter="url(#winShadow)"/>
+  <path d="M0 13a13 13 0 0 1 13-13h514a13 13 0 0 1 13 13v23H0z" fill="#f7f7f9"/>
+  <rect y="36" width="540" height="1" fill="#ececf0"/><circle cx="18" cy="18" r="5" fill="#ff5f57"/><circle cx="34" cy="18" r="5" fill="#febc2e"/><circle cx="50" cy="18" r="5" fill="#28c840"/>
+  <rect x="160" y="8" width="220" height="20" rx="10" fill="#f1f1f4"/>
+  <text x="270" y="22" class="t" font-size="11" fill="#8c8c92" text-anchor="middle">analytics.app/dashboard</text>
+  <g transform="translate(28,54)"><rect width="112" height="46" rx="9" fill="#f6f6f9"/><rect x="12" y="12" width="46" height="6" rx="3.0" fill="#dcdce4"/><rect x="12" y="27" width="60" height="9" rx="4.5" fill="#c9d3f2"/></g><g transform="translate(152,54)"><rect width="112" height="46" rx="9" fill="#f6f6f9"/><rect x="12" y="12" width="46" height="6" rx="3.0" fill="#dcdce4"/><rect x="12" y="27" width="74" height="9" rx="4.5" fill="#c9d3f2"/></g><g transform="translate(276,54)"><rect width="112" height="46" rx="9" fill="#f6f6f9"/><rect x="12" y="12" width="46" height="6" rx="3.0" fill="#dcdce4"/><rect x="12" y="27" width="52" height="9" rx="4.5" fill="#f6c1b8"/></g><g transform="translate(400,54)"><rect width="112" height="46" rx="9" fill="#f6f6f9"/><rect x="12" y="12" width="46" height="6" rx="3.0" fill="#dcdce4"/><rect x="12" y="27" width="66" height="9" rx="4.5" fill="#c9d3f2"/></g>
+  <g transform="translate(90,124)"><g id="chart">
+  <path d="M0 78 L40 70 L80 74 L120 60 L160 64 L200 18 L240 52 L280 58 L320 50 L360 56 V96 H0 Z" fill="url(#chartFill)"/>
+  <path d="M0 78 L40 70 L80 74 L120 60 L160 64 L200 18 L240 52 L280 58 L320 50 L360 56" fill="none" stroke="#6180d9" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="200" cy="18" r="4.5" fill="#fff" stroke="#e66b80" stroke-width="2.4"/>
+  <path d="M0 96.5H360" stroke="#ececf0"/>
+</g></g>
+  <rect x="90" y="240" width="300" height="8" rx="4.0" fill="#e9e9ee"/><rect x="90" y="256" width="230" height="8" rx="4.0" fill="#e9e9ee"/><rect x="90" y="272" width="270" height="8" rx="4.0" fill="#e9e9ee"/>
+</g>
+  <g transform="translate(108,120)">
+    <rect class="flash" width="332" height="140" rx="4" fill="#fff"/>
+    <rect class="marquee" width="332" height="140" rx="4" fill="#6180d9" fill-opacity=".12"
+          stroke="#6180d9" stroke-width="1.5" stroke-dasharray="6 4"
+          style="transform-box:fill-box;transform-origin:0 0"/>
+  </g>
+  <g transform="translate(80,118)"><g class="panel" style="transform-box:fill-box;transform-origin:50% 0">
+    <rect width="440" height="190" rx="13" fill="#fff" filter="url(#panelShadow)"/>
+    <g transform="translate(12,12)"><rect width="416" height="112" rx="8" fill="#f6f6f9"/>
+    <g transform="translate(58,10) scale(.84)"><use href="#chart"/></g></g>
+    <clipPath id="in1"><rect x="12" y="138" width="416" height="30"/></clipPath>
+    <g clip-path="url(#in1)">
+      <text x="17" y="159" class="t" font-size="14" fill="#55555c" textLength="196" lengthAdjust="spacingAndGlyphs">这个尖峰 = 早上 9 点那条推送</text>
+      <g class="wipe"><rect x="16" y="140" width="420" height="28" fill="#fff"/>
+        <rect class="caret" x="17" y="144" width="1.6" height="19" rx=".8" fill="#6180d9"/></g>
+    </g>
+    <text class="t ph" x="22" y="159" font-size="14" fill="#b9b9c0">写一句评论…</text>
+    <text x="428" y="180" class="t" font-size="10" fill="#b9b9c0" text-anchor="end">↵ save · esc</text>
+  </g></g>
+  <g transform="translate(80,96)"><g class="card" style="transform-box:fill-box;transform-origin:50% 50%">
+    <rect width="440" height="214" rx="12" fill="#fff" filter="url(#panelShadow)"/>
+    <rect width="440" height="214" rx="12" fill="url(#gGreen)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#59b39e" opacity=".75"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#3f9a85">14:22</text>
+    <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">这个尖峰 = 早上 9 点那条推送</text>
+    <g transform="translate(12,66)"><rect width="416" height="136" rx="8" fill="#fff"/>
+      <g transform="translate(28,14) scale(1)"><use href="#chart"/></g></g>
+  </g></g>
+  <g transform="translate(300,346)"><g class="hk"><g transform="translate(-58,0)"><rect y="4" width="52" height="48" rx="11" fill="#d9d9e2"/><rect width="52" height="48" rx="11" fill="#fff" stroke="#e3e3ea"/><path d="M15 17h7l9 14h6M28 17h9" fill="none" stroke="#55555c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(6,0)"><rect y="4" width="52" height="48" rx="11" fill="#d9d9e2"/><rect width="52" height="48" rx="11" fill="#fff" stroke="#e3e3ea"/><text x="26" y="31" class="t" font-size="18" font-weight="600" fill="#55555c" text-anchor="middle">R</text></g></g><g class="ret"><g transform="translate(-38,0)"><rect y="4" width="76" height="48" rx="11" fill="#d9d9e2"/><rect width="76" height="48" rx="11" fill="#fff" stroke="#e3e3ea"/><path d="M50 16v10a4 4 0 0 1-4 4H26m0 0 6-6m-6 6 6 6" fill="none" stroke="#55555c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></g></g>
+  <g transform="translate(30,26)"><g class="cur"><path d="M0 0v17l4.6-4.2 3 7 2.6-1.1-3-6.9H13z" fill="#1f1f24" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></g></g>
+</g>
+</svg>

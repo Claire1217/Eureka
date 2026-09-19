@@ -35,6 +35,11 @@ write_plist() {
     <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
     <key>NSAppleEventsUsageDescription</key>
     <string>Eureka reads the current page URL from your browser and, if you choose Apple Notes, saves thoughts there.</string>
 </dict>
