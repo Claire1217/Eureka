@@ -12,7 +12,7 @@
 </div>
 
 <p align="center">
-  <img src="assets/obsidian-demo.png" alt="用 Eureka 记下的想法，在 Obsidian 里显示为彩色卡片" width="800">
+  <img src="assets/hero.zh-CN.svg" alt="Eureka 演示：选中文字，按 Option+T，写一句话，回车，想法带着来源以彩色卡片的形式出现在 Obsidian 里" width="880">
 </p>
 
 ## 为什么做这个
@@ -85,6 +85,10 @@ cd Eureka && ./deploy.sh
     Thoughts.md       # 当天所有想法，callout 格式
     attachments/      # 截图
 ```
+
+<p align="center">
+  <img src="assets/obsidian-demo.png" alt="用 Eureka 记下的一天的想法，在 Obsidian 里显示为彩色卡片" width="760">
+</p>
 
 每条想法都是标准的 Obsidian callout，在任何编辑器里都能读：
 

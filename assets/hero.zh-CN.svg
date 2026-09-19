@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img"
+     aria-label="Eureka 演示：在任意应用选中文字，按 Option+T，写一句话，回车。想法会带着来源，以彩色卡片的形式出现在 Obsidian 里。">
+<defs>
+  <style>
+    .t{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Helvetica Neue",Arial,sans-serif} .mut{fill:#8c8c92}
+    @keyframes cursor{0.00%{transform:translate(250px,250px);animation-timing-function:cubic-bezier(.45,0,.25,1)}8.00%{transform:translate(30px,264px);animation-timing-function:cubic-bezier(.45,0,.25,1)}17.00%{transform:translate(378px,270px)}89.50%{transform:translate(378px,270px);animation-timing-function:cubic-bezier(.45,0,.25,1)}100.00%{transform:translate(250px,250px)}}.cursor{animation:cursor 10.0s linear infinite}@keyframes select{0.00%{transform:scaleX(0);opacity:1}8.00%{transform:scaleX(0);opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}17.00%{transform:scaleX(1);opacity:1}60.00%{transform:scaleX(1);opacity:1}64.00%{transform:scaleX(1);opacity:0}100.00%{transform:scaleX(0);opacity:0}}.select{animation:select 10.0s linear infinite}@keyframes keys{0.00%{opacity:0;transform:translateY(8px)}18.99%{opacity:0;transform:translateY(8px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}21.50%{opacity:1;transform:translateY(0)}29.00%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.45,0,.25,1)}32.00%{opacity:0;transform:translateY(0)}100.00%{opacity:0;transform:translateY(0)}}.keys{animation:keys 10.0s linear infinite}@keyframes capA{0.00%{transform:translateY(0)}22.50%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.2,1)}23.50%{transform:translateY(4px)}25.50%{transform:translateY(4px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}27.00%{transform:translateY(0)}100.00%{transform:translateY(0)}}.capA{animation:capA 10.0s linear infinite}@keyframes capB{0.00%{transform:translateY(0)}23.30%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.2,1)}24.30%{transform:translateY(4px)}26.30%{transform:translateY(4px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}27.80%{transform:translateY(0)}100.00%{transform:translateY(0)}}.capB{animation:capB 10.0s linear infinite}@keyframes ret{0.00%{opacity:0;transform:translateY(8px)}53.49%{opacity:0;transform:translateY(8px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}55.50%{opacity:1;transform:translateY(0)}56.50%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.2,1)}57.50%{opacity:1;transform:translateY(4px)}59.30%{opacity:1;transform:translateY(0)}62.00%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.45,0,.25,1)}65.00%{opacity:0;transform:translateY(0)}100.00%{opacity:0;transform:translateY(0)}}.ret{animation:ret 10.0s linear infinite}@keyframes panel{0.00%{opacity:0;transform:translateY(10px) scale(.96)}23.99%{opacity:0;transform:translateY(10px) scale(.96);animation-timing-function:cubic-bezier(.2,.8,.2,1)}27.00%{opacity:1;transform:translateY(0) scale(1)}58.00%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.45,0,.25,1)}60.50%{opacity:0;transform:translateY(-6px) scale(.98)}100.00%{opacity:0;transform:translateY(-6px) scale(.98)}}.panel{animation:panel 10.0s linear infinite}@keyframes placeholder{0.00%{opacity:0}23.99%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}27.00%{opacity:1}29.50%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}30.00%{opacity:0}100.00%{opacity:0}}.placeholder{animation:placeholder 10.0s linear infinite}@keyframes wipe{0.00%{transform:translateX(0)}30.00%{transform:translateX(0)}53.00%{transform:translateX(262px)}61.00%{transform:translateX(262px)}61.10%{transform:translateX(0)}100.00%{transform:translateX(0)}}.wipe{animation:wipe 10.0s linear infinite}@keyframes cap1{0.00%{opacity:0}2.49%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}5.50%{opacity:1}17.50%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}19.50%{opacity:0}100.00%{opacity:0}}.cap1{animation:cap1 10.0s linear infinite}@keyframes cap2{0.00%{opacity:0}18.99%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}21.50%{opacity:1}28.00%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}30.00%{opacity:0}100.00%{opacity:0}}.cap2{animation:cap2 10.0s linear infinite}@keyframes cap3{0.00%{opacity:0}29.99%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}32.50%{opacity:1}52.00%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}53.50%{opacity:0}100.00%{opacity:0}}.cap3{animation:cap3 10.0s linear infinite}@keyframes cap4{0.00%{opacity:0}53.49%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}56.00%{opacity:1}93.50%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}96.50%{opacity:0}100.00%{opacity:0}}.cap4{animation:cap4 10.0s linear infinite}@keyframes card{0.00%{opacity:0;transform:translateY(22px) scale(.97)}59.99%{opacity:0;transform:translateY(22px) scale(.97);animation-timing-function:cubic-bezier(.3,1.5,.5,1)}65.50%{opacity:1;transform:translateY(0) scale(1)}93.50%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.45,0,.25,1)}97.50%{opacity:0;transform:translateY(0) scale(1)}100.00%{opacity:0;transform:translateY(0) scale(1)}}.card{animation:card 10.0s linear infinite}@keyframes glow{0.00%{opacity:0}60.00%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}64.00%{opacity:0.9;animation-timing-function:cubic-bezier(.45,0,.25,1)}76.00%{opacity:0}100.00%{opacity:0}}.glow{animation:glow 10.0s linear infinite}@keyframes bubble{0.00%{transform:scale(1)}60.00%{transform:scale(1);animation-timing-function:cubic-bezier(.2,.8,.2,1)}61.20%{transform:scale(1.35);animation-timing-function:cubic-bezier(.45,0,.25,1)}63.00%{transform:scale(.92);animation-timing-function:cubic-bezier(.45,0,.25,1)}65.00%{transform:scale(1)}100.00%{transform:scale(1)}}.bubble{animation:bubble 10.0s linear infinite}@keyframes bubbleCoral{0.00%{opacity:0}60.00%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}65.00%{opacity:1}93.50%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}97.50%{opacity:0}100.00%{opacity:0}}.bubbleCoral{animation:bubbleCoral 10.0s linear infinite}@keyframes blink{0%,55%{opacity:1}56%,100%{opacity:0}}.caret{animation:blink 1s steps(1) infinite}@keyframes driftA{from{transform:translate(0,0)}to{transform:translate(60px,40px)}}@keyframes driftB{from{transform:translate(0,0)}to{transform:translate(-70px,-30px)}}.blobA{animation:driftA 10s ease-in-out infinite alternate}.blobB{animation:driftB 10s ease-in-out infinite alternate}.panel,.keys,.ret,.placeholder,.cap1,.cap2,.cap3,.glow{opacity:0}.wipe{transform:translateX(262px)}@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  </style>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff4ee"/><stop offset=".5" stop-color="#f6f3ff"/><stop offset="1" stop-color="#eef6ff"/>
+  </linearGradient>
+  <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9f3fc"/><stop offset="1" stop-color="#e6ebfa"/></linearGradient>
+  <linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7f0fc"/><stop offset="1" stop-color="#efe8f9"/></linearGradient>
+  <linearGradient id="gCoral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf0e8"/><stop offset="1" stop-color="#fbe7ea"/></linearGradient>
+  <linearGradient id="dotBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc7f2"/><stop offset="1" stop-color="#6180d9"/></linearGradient>
+  <linearGradient id="dotCoral" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a673"/><stop offset="1" stop-color="#e66b80"/></linearGradient>
+  <filter id="winShadow" x="-10%" y="-10%" width="120%" height="125%">
+    <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#5b5b8a" flood-opacity=".16"/>
+  </filter>
+  <filter id="panelShadow" x="-15%" y="-40%" width="130%" height="200%">
+    <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#2b2b55" flood-opacity=".22"/>
+  </filter>
+  <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="60"/></filter>
+  <filter id="soft" x="-10%" y="-20%" width="120%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+  <clipPath id="inputClip"><rect x="12" y="44" width="416" height="32"/></clipPath>
+  <clipPath id="frame"><rect width="1200" height="690" rx="28"/></clipPath>
+</defs>
+<g clip-path="url(#frame)">
+  <rect width="1200" height="690" fill="url(#bg)"/>
+  <circle class="blobA" cx="180" cy="120" r="170" fill="#f5a673" opacity=".22" filter="url(#blur)"/>
+  <circle class="blobB" cx="1040" cy="560" r="200" fill="#8cc7f2" opacity=".28" filter="url(#blur)"/>
+  <circle class="blobA" cx="640" cy="690" r="150" fill="#d9b3f2" opacity=".25" filter="url(#blur)"/>
+  
+<g transform="translate(56,64)">
+  <rect width="520" height="392" rx="14" fill="#fff" filter="url(#winShadow)"/>
+  <path d="M0 14a14 14 0 0 1 14-14h492a14 14 0 0 1 14 14v26H0z" fill="#f7f7f9"/>
+  <rect y="40" width="520" height="1" fill="#ececf0"/>
+  <circle cx="20" cy="20" r="5.5" fill="#ff5f57"/><circle cx="38" cy="20" r="5.5" fill="#febc2e"/><circle cx="56" cy="20" r="5.5" fill="#28c840"/><rect x="150.0" y="9" width="220" height="22" rx="11" fill="#f1f1f4"/><text x="260.0" y="24.5" class="t mut" font-size="11.5" text-anchor="middle">mixpanel.com/funnels</text>
+  
+  <rect x="32" y="70" width="210" height="13" rx="6.5" fill="#d4d4dc"/>
+  <rect x="32" y="98" width="430" height="9" rx="4.5" fill="#e9e9ee"/><rect x="32" y="116" width="380" height="9" rx="4.5" fill="#e9e9ee"/>
+  <rect x="32" y="146" width="44" height="76" rx="6" fill="#dfe6f7"/><rect x="36" y="232" width="36" height="6" rx="3" fill="#ececf0"/><rect x="94" y="162" width="44" height="60" rx="6" fill="#dfe6f7"/><rect x="98" y="232" width="36" height="6" rx="3" fill="#ececf0"/><rect x="156" y="189" width="44" height="33" rx="6" fill="#f6c1b8"/><rect x="160" y="232" width="36" height="6" rx="3" fill="#ececf0"/><rect x="218" y="194" width="44" height="28" rx="6" fill="#dfe6f7"/><rect x="222" y="232" width="36" height="6" rx="3" fill="#ececf0"/>
+  <rect x="300" y="150" width="170" height="9" rx="4.5" fill="#e9e9ee"/><rect x="300" y="170" width="150" height="9" rx="4.5" fill="#e9e9ee"/><rect x="300" y="190" width="176" height="9" rx="4.5" fill="#e9e9ee"/><rect x="300" y="210" width="120" height="9" rx="4.5" fill="#e9e9ee"/>
+  <g transform="translate(28,258)">
+    <rect class="select" width="350" height="28" rx="5" fill="#6180d9" fill-opacity=".24"
+          style="transform-box:fill-box;transform-origin:0 50%"/>
+  </g>
+  <text x="32" y="277" class="t" font-size="15" fill="#2b2b2f" textLength="342"
+        lengthAdjust="spacingAndGlyphs">Step 3: “Tell us about yourself” — 42% drop-off</text>
+  <rect x="32" y="308" width="440" height="9" rx="4.5" fill="#e9e9ee"/><rect x="32" y="326" width="300" height="9" rx="4.5" fill="#e9e9ee"/><rect x="32" y="344" width="400" height="9" rx="4.5" fill="#e9e9ee"/><rect x="32" y="362" width="250" height="9" rx="4.5" fill="#e9e9ee"/>
+
+</g>
+  
+<g transform="translate(624,64)">
+  <rect width="520" height="560" rx="14" fill="#fff" filter="url(#winShadow)"/>
+  <path d="M0 14a14 14 0 0 1 14-14h492a14 14 0 0 1 14 14v26H0z" fill="#f7f7f9"/>
+  <rect y="40" width="520" height="1" fill="#ececf0"/>
+  <circle cx="20" cy="20" r="5.5" fill="#ff5f57"/><circle cx="38" cy="20" r="5.5" fill="#febc2e"/><circle cx="56" cy="20" r="5.5" fill="#28c840"/><rect x="84" y="8" width="132" height="32" rx="8" fill="#fff"/><text x="100" y="28.5" class="t" font-size="12.5" fill="#444">Thoughts</text>
+  
+  <text x="260" y="70" class="t" font-size="11" fill="#a0a0a8" text-anchor="middle">Eureka / 2026-06-29 / Thoughts</text>
+  <text x="32" y="112" class="t" font-size="22" font-weight="700" fill="#1f1f24">Random Thoughts — 2026-06-29</text>
+  
+<g transform="translate(32,134)">
+  <g class="" style="transform-box:fill-box;transform-origin:50% 50%">
+    
+    <rect width="456" height="72" rx="10" fill="url(#gBlue)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#6180d9" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#6180d9" opacity=".85">09:12</text>
+    <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">把全城骑手的实时路线画出来 = 城市的血管系统</text>
+    
+  </g>
+</g>
+  
+<g transform="translate(32,218)">
+  <g class="" style="transform-box:fill-box;transform-origin:50% 50%">
+    
+    <rect width="456" height="93" rx="10" fill="url(#gPurple)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#9e73d1" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#9e73d1" opacity=".85">10:40</text>
+    <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">Linear 建 issue 只要一个快捷键。</text><text x="16" y="73" class="t" font-size="14" fill="#2b2b2f">我们要点三次，太重了。</text>
+    
+  </g>
+</g>
+  
+<g transform="translate(32,323)">
+  <g class="card" style="transform-box:fill-box;transform-origin:50% 50%">
+    <rect class="glow" x="-5" y="-5" width="466" height="130" rx="14" fill="none" stroke="#e66b80" stroke-opacity=".45" stroke-width="2" filter="url(#soft)"/>
+    <rect width="456" height="120" rx="10" fill="url(#gCoral)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#e66b80" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#e66b80" opacity=".85">11:03</text>
+    <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">job title 改成可跳过，首次使用后再问</text>
+    <rect x="16" y="66" width="2" height="40" rx="1" fill="#000" fill-opacity=".15"/>
+    <text x="28" y="81" class="t" font-size="12.5" font-style="italic" fill="#77777f">Step 3: “Tell us about yourself” — 42% drop-off</text>
+    <text x="28" y="100" class="t" font-size="12.5" fill="#77777f">【<tspan fill="#7a6ad8" text-decoration="underline">mixpanel.com/funnels</tspan>】</text>
+  </g>
+</g>
+
+</g>
+  
+<g transform="translate(316,486)">
+  <g class="keys">
+    
+<g transform="translate(-64,0)"><g class="capA">
+  <rect y="4" width="58" height="54" rx="12" fill="#d9d9e2"/>
+  <rect width="58" height="54" rx="12" fill="#fff" stroke="#e3e3ea"/>
+  <path d="M17 19h8l10 16h6M31 19h10" fill="none" stroke="#55555c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g></g>
+    
+<g transform="translate(6,0)"><g class="capB">
+  <rect y="4" width="58" height="54" rx="12" fill="#d9d9e2"/>
+  <rect width="58" height="54" rx="12" fill="#fff" stroke="#e3e3ea"/>
+  <text x="29" y="35" class="t" font-size="20" font-weight="600" fill="#55555c" text-anchor="middle">T</text>
+</g></g>
+  </g>
+  <g class="ret">
+<g transform="translate(-42,0)"><g class="">
+  <rect y="4" width="84" height="54" rx="12" fill="#d9d9e2"/>
+  <rect width="84" height="54" rx="12" fill="#fff" stroke="#e3e3ea"/>
+  <path d="M56 18v12a4 4 0 0 1-4 4H28m0 0 7-7m-7 7 7 7" fill="none" stroke="#55555c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g></g></g>
+  <g font-size="16" text-anchor="middle" class="t" fill="#6b6b75" font-weight="500">
+    <text class="cap1" y="102">在任意应用里选中文字</text>
+    <text class="cap2" y="102">按下 Option + T</text>
+    <text class="cap3" y="102">写一句话</text>
+    <text class="cap4" y="102">回车，已经在你的笔记里了</text>
+  </g>
+</g>
+  
+<g transform="translate(116,366)">
+  <g class="panel" style="transform-box:fill-box;transform-origin:50% 0">
+    <rect width="440" height="96" rx="13" fill="#fff" filter="url(#panelShadow)"/>
+    <rect x="12" y="11" width="416" height="27" rx="8" fill="#000" fill-opacity=".04"/>
+    <text x="22" y="29" class="t" font-size="11.5" fill="#8c8c92">Step 3: “Tell us about yourself” — 42% drop-off</text>
+    <g clip-path="url(#inputClip)">
+      <text x="17" y="66" class="t" font-size="14" fill="#55555c" textLength="256"
+            lengthAdjust="spacingAndGlyphs">job title 改成可跳过，首次使用后再问</text>
+      <g class="wipe">
+        <rect x="16" y="46" width="302" height="28" fill="#fff"/>
+        <rect class="caret" x="17" y="51" width="1.6" height="19" rx=".8" fill="#6180d9"/>
+      </g>
+    </g>
+    <text class="t placeholder" x="22" y="66" font-size="14" fill="#b9b9c0">记个想法… 或 / 问 AI</text>
+    <text x="428" y="86" class="t" font-size="10" fill="#b9b9c0" text-anchor="end">↵ save · esc</text>
+  </g>
+</g>
+  
+<g transform="translate(1146,642)">
+  <g class="bubble" style="transform-box:fill-box;transform-origin:50% 50%">
+    <circle r="13" fill="url(#dotBlue)"/>
+    <circle class="bubbleCoral" r="13" fill="url(#dotCoral)"/>
+  </g>
+</g>
+  
+<g transform="translate(56,64)"><g class="cursor">
+  <path d="M0 0v17l4.6-4.2 3 7 2.6-1.1-3-6.9H13z" fill="#1f1f24" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+</g></g>
+</g>
+</svg>

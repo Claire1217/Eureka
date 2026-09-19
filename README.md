@@ -16,7 +16,7 @@ the page you were on, or a screenshot — straight into Obsidian or Apple Notes.
 </div>
 
 <p align="center">
-  <img src="assets/obsidian-demo.png" alt="Thoughts captured with Eureka, shown as colored cards in Obsidian" width="800">
+  <img src="assets/hero.svg" alt="Eureka demo: select text, press Option+T, type one line, press Enter — the thought lands in Obsidian as a colored card with its source" width="880">
 </p>
 
 ## Why
@@ -94,6 +94,10 @@ your-vault/Eureka/
     Thoughts.md       # every thought of the day, as callouts
     attachments/      # screenshots
 ```
+
+<p align="center">
+  <img src="assets/obsidian-demo.png" alt="A day of thoughts captured with Eureka, shown as colored cards in Obsidian" width="760">
+</p>
 
 Each thought is a standard Obsidian callout, so the file stays readable anywhere:
 
