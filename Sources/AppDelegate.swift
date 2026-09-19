@@ -442,7 +442,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !apiKey.isEmpty else {
             fputs("[Eureka] DeepSeek API key not set\n", stderr)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.capturePanel?.finishStreamWithMessage("API key 未设置\n\n点击菜单栏 E! → Settings → 填入 DeepSeek API key\n获取: platform.deepseek.com")
+                self?.capturePanel?.finishStreamWithMessage(L(
+                    "API key 未设置\n\n点击菜单栏 E! → Settings → 填入 API key\nDeepSeek 的 key 在 platform.deepseek.com 获取",
+                    "No API key yet\n\nE! in the menu bar → Settings… → paste your API key\nDeepSeek keys: platform.deepseek.com"))
             }
             return
         }

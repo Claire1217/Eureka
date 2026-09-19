@@ -157,7 +157,7 @@ def document(anim, body, aria, blobs):
 S = {
     "en": dict(
         shot_thought=("spike = the push we sent at 9am", 214),
-        shot_placeholder="Add a comment…",
+        shot_placeholder="Jot a thought… or / to ask AI",
         shot_aria="Eureka screenshot capture: press Option+R, drag a region, type one line, press Enter. "
                   "The screenshot and the comment are saved together as one card.",
         ask_q=("what does p95 mean?", 138),
@@ -169,7 +169,7 @@ S = {
     ),
     "zh": dict(
         shot_thought=("这个尖峰 = 早上 9 点那条推送", 196),
-        shot_placeholder="写一句评论…",
+        shot_placeholder="记个想法… 或 /指令 问AI",
         shot_aria="Eureka 截图捕获：按 Option+R，框选一块区域，写一句话，回车。"
                   "截图和评论会作为同一张卡片保存。",
         ask_q=("p95 是什么意思？", 118),
@@ -364,7 +364,7 @@ def ask_scene():
       <g class="wipe"><rect x="16" y="46" width="420" height="28" fill="#fff"/>
         <g class="caretBox"><rect class="caret" x="17" y="51" width="1.6" height="19" rx=".8" fill="{AI}"/></g></g>
     </g>
-    <text class="t ph" x="22" y="66" font-size="14" fill="#b9b9c0">Jot a thought… or / to ask AI</text>
+    <text class="t ph" x="22" y="66" font-size="14" fill="#b9b9c0">{S["shot_placeholder"]}</text>
     <g class="dots" fill="{AI}"><circle class="d1" cx="22" cy="104" r="2.6"/><circle class="d2" cx="32" cy="104" r="2.6"/><circle class="d3" cx="42" cy="104" r="2.6"/></g>
     <rect class="sep" x="16" y="88" width="408" height="1" fill="#000" fill-opacity=".07"/>
     <clipPath id="in3"><rect x="12" y="98" width="416" height="74"/></clipPath>

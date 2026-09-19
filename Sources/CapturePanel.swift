@@ -154,7 +154,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         isAIMode = false
 
         // Placeholder
-        let placeholder = NSTextField(labelWithString: "记个想法… 或 /指令 问AI")
+        let placeholder = NSTextField(labelWithString: L("记个想法… 或 /指令 问AI", "Jot a thought… or / to ask AI"))
         placeholder.font = NSFont.systemFont(ofSize: 13)
         placeholder.textColor = EU.faint
         placeholder.frame = NSMakeRect(14, inputY + 2, 260, 20)

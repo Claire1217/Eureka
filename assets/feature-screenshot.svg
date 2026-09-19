@@ -50,7 +50,7 @@
       <g class="wipe"><rect x="16" y="140" width="420" height="28" fill="#fff"/>
         <rect class="caret" x="17" y="144" width="1.6" height="19" rx=".8" fill="#6180d9"/></g>
     </g>
-    <text class="t ph" x="22" y="159" font-size="14" fill="#b9b9c0">Add a comment…</text>
+    <text class="t ph" x="22" y="159" font-size="14" fill="#b9b9c0">Jot a thought… or / to ask AI</text>
     <text x="428" y="180" class="t" font-size="10" fill="#b9b9c0" text-anchor="end">↵ save · esc</text>
   </g></g>
   <g transform="translate(80,96)"><g class="card" style="transform-box:fill-box;transform-origin:50% 50%">

@@ -2,7 +2,9 @@ import Cocoa
 
 class LocalStorage {
     static let shared = LocalStorage()
-    private var colorIndex = 0
+    // Starts at 1, not 0: the floating bubble shows palette[0] at launch and moves to the next
+    // colour on every save, so a card and the bubble it came from now share their colour.
+    private var colorIndex = 1
 
     var vaultPath: String {
         get { UserDefaults.standard.string(forKey: "vaultPath") ?? "" }

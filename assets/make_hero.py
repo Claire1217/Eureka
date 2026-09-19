@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Generates assets/hero.svg — the animated README hero.
 
+What it shows follows the app: the panel's placeholder and hint, the quote chip, the source
+(page link for browsers, app name otherwise), and the colours — a session's cards go blue,
+purple, green… and the floating bubble takes the colour of the card just saved.
+
 Two captures in a row, in two very different apps (a web page, then a code
 editor), landing in the same Obsidian note: the point is "any app, same hotkey".
 
@@ -32,7 +36,7 @@ S = {
         out="hero.zh-CN.svg",
         thought_a=("job title 改成可跳过，首次使用后再问", 256),
         thought_b=("300ms 太快，用户根本看不到，改成 500 试试", 272),
-        placeholder="记个想法… 或 / 问 AI",
+        placeholder="记个想法… 或 /指令 问AI",
         select="在任意应用里选中文字", press="按下 Option + T", type="写一句话",
         saved="回车，已经在你的笔记里了",
         switch="换一个应用，还是同一个快捷键", both="网页也好，代码编辑器也好，都进同一篇笔记",
@@ -363,19 +367,19 @@ LINK = '<tspan fill="#7a6ad8" text-decoration="underline">mixpanel.com/funnels</
 notes_body = f'''
   <text x="260" y="70" class="t" font-size="11" fill="#a0a0a8" text-anchor="middle">Eureka / 2026-06-29 / Thoughts</text>
   <text x="32" y="112" class="t" font-size="22" font-weight="700" fill="#1f1f24">Random Thoughts — 2026-06-29</text>
-  {card(134, 72, "gBlue", "#6180d9", "09:12", S["card1"])}
-  {card(218, 72, "gPurple", "#9e73d1", "10:40", S["card2"])}
-  {new_card("a", 302, "gCoral", "#e66b80", "11:03", TA, QUOTE_A, LINK)}
-  {new_card("b", 434, "gGreen", "#3f9a85", "11:20", TB, QUOTE_B, "Code", quote_cls="m", italic=False)}
+  {card(134, 72, "gAmber", "#c9822f", "09:12", S["card1"])}
+  {card(218, 72, "gGreen", "#3f9a85", "10:40", S["card2"])}
+  {new_card("a", 302, "gBlue", "#6180d9", "11:03", TA, QUOTE_A, LINK)}
+  {new_card("b", 434, "gPurple", "#9e73d1", "11:20", TB, QUOTE_B, "Code", quote_cls="m", italic=False)}
 '''
 
 bubble = '''
 <g transform="translate(1160,650)">
   <g class="abounce" style="transform-box:fill-box;transform-origin:50% 50%">
   <g class="bbounce" style="transform-box:fill-box;transform-origin:50% 50%">
-    <circle r="13" fill="url(#dotBlue)"/>
-    <circle class="adot" r="13" fill="url(#dotCoral)"/>
-    <circle class="bdot" r="13" fill="url(#dotGreen)"/>
+    <circle r="13" fill="url(#dotCoral)"/>
+    <circle class="adot" r="13" fill="url(#dotBlue)"/>
+    <circle class="bdot" r="13" fill="url(#dotPurple)"/>
   </g></g>
 </g>'''
 
@@ -413,11 +417,11 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="i
   </linearGradient>
   {grad("gBlue", "#e9f3fc", "#e6ebfa")}
   {grad("gPurple", "#f7f0fc", "#efe8f9")}
-  {grad("gCoral", "#fdf0e8", "#fbe7ea")}
+  {grad("gAmber", "#fdf6e6", "#fbeede")}
   {grad("gGreen", "#ecf9f2", "#e3f3ef")}
   {grad("dotBlue", "#8cc7f2", "#6180d9", True)}
   {grad("dotCoral", "#f5a673", "#e66b80", True)}
-  {grad("dotGreen", "#99e6bf", "#59b39e", True)}
+  {grad("dotPurple", "#d9b3f2", "#9e73d1", True)}
   <filter id="winShadow" x="-10%" y="-10%" width="120%" height="125%">
     <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#5b5b8a" flood-opacity=".16"/>
   </filter>

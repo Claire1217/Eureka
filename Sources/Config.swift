@@ -31,6 +31,10 @@ var screenshotHotkeyLabel: String {
     hotkeyLabel("hotkeyScreenshot", "hotkeyScreenshotMods", fallbackKey: HOTKEY_SCREENSHOT, fallbackMod: HOTKEY_MODIFIERS)
 }
 
+/// The few strings the panel shows are Chinese on a Chinese system and English everywhere else.
+let prefersChinese: Bool = (Locale.preferredLanguages.first ?? "en").hasPrefix("zh")
+func L(_ zh: String, _ en: String) -> String { prefersChinese ? zh : en }
+
 let THOUGHT_COLORS = ["coral", "blue", "purple", "green", "amber", "olive", "pink", "steel"]
 
 struct EU {

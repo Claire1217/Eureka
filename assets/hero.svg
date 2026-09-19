@@ -10,11 +10,11 @@
   </linearGradient>
   <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9f3fc"/><stop offset="1" stop-color="#e6ebfa"/></linearGradient>
   <linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7f0fc"/><stop offset="1" stop-color="#efe8f9"/></linearGradient>
-  <linearGradient id="gCoral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf0e8"/><stop offset="1" stop-color="#fbe7ea"/></linearGradient>
+  <linearGradient id="gAmber" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf6e6"/><stop offset="1" stop-color="#fbeede"/></linearGradient>
   <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecf9f2"/><stop offset="1" stop-color="#e3f3ef"/></linearGradient>
   <linearGradient id="dotBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc7f2"/><stop offset="1" stop-color="#6180d9"/></linearGradient>
   <linearGradient id="dotCoral" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a673"/><stop offset="1" stop-color="#e66b80"/></linearGradient>
-  <linearGradient id="dotGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#99e6bf"/><stop offset="1" stop-color="#59b39e"/></linearGradient>
+  <linearGradient id="dotPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b3f2"/><stop offset="1" stop-color="#9e73d1"/></linearGradient>
   <filter id="winShadow" x="-10%" y="-10%" width="120%" height="125%">
     <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#5b5b8a" flood-opacity=".16"/>
   </filter>
@@ -112,9 +112,9 @@
 <g transform="translate(32,134)">
   <g class="" style="transform-box:fill-box;transform-origin:50% 50%">
     
-    <rect width="456" height="72" rx="10" fill="url(#gBlue)"/>
-    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#6180d9" opacity=".7"/>
-    <text x="35" y="25" class="t" font-size="11.5" fill="#6180d9" opacity=".85">09:12</text>
+    <rect width="456" height="72" rx="10" fill="url(#gAmber)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#c9822f" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#c9822f" opacity=".85">09:12</text>
     <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">Courier routes drawn live = a city’s bloodstream</text>
     
   </g>
@@ -123,9 +123,9 @@
 <g transform="translate(32,218)">
   <g class="" style="transform-box:fill-box;transform-origin:50% 50%">
     
-    <rect width="456" height="72" rx="10" fill="url(#gPurple)"/>
-    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#9e73d1" opacity=".7"/>
-    <text x="35" y="25" class="t" font-size="11.5" fill="#9e73d1" opacity=".85">10:40</text>
+    <rect width="456" height="72" rx="10" fill="url(#gGreen)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#3f9a85" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#3f9a85" opacity=".85">10:40</text>
     <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">Linear files an issue in one keystroke; we need three clicks.</text>
     
   </g>
@@ -133,10 +133,10 @@
   
 <g transform="translate(32,302)">
   <g class="acard" style="transform-box:fill-box;transform-origin:50% 50%">
-    <rect class="aglow" x="-5" y="-5" width="466" height="130" rx="14" fill="none" stroke="#e66b80" stroke-opacity=".45" stroke-width="2" filter="url(#soft)"/>
-    <rect width="456" height="120" rx="10" fill="url(#gCoral)"/>
-    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#e66b80" opacity=".7"/>
-    <text x="35" y="25" class="t" font-size="11.5" fill="#e66b80" opacity=".85">11:03</text>
+    <rect class="aglow" x="-5" y="-5" width="466" height="130" rx="14" fill="none" stroke="#6180d9" stroke-opacity=".45" stroke-width="2" filter="url(#soft)"/>
+    <rect width="456" height="120" rx="10" fill="url(#gBlue)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#6180d9" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#6180d9" opacity=".85">11:03</text>
     <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">make job title optional — ask again after first use</text>
     <rect x="16" y="66" width="2" height="40" rx="1" fill="#000" fill-opacity=".15"/>
     <text x="28" y="81" class="t" font-size="12.5" font-style="italic" fill="#77777f">Step 3: “Tell us about yourself” — 42% drop-off</text>
@@ -146,10 +146,10 @@
   
 <g transform="translate(32,434)">
   <g class="bcard" style="transform-box:fill-box;transform-origin:50% 50%">
-    <rect class="bglow" x="-5" y="-5" width="466" height="130" rx="14" fill="none" stroke="#3f9a85" stroke-opacity=".45" stroke-width="2" filter="url(#soft)"/>
-    <rect width="456" height="120" rx="10" fill="url(#gGreen)"/>
-    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#3f9a85" opacity=".7"/>
-    <text x="35" y="25" class="t" font-size="11.5" fill="#3f9a85" opacity=".85">11:20</text>
+    <rect class="bglow" x="-5" y="-5" width="466" height="130" rx="14" fill="none" stroke="#9e73d1" stroke-opacity=".45" stroke-width="2" filter="url(#soft)"/>
+    <rect width="456" height="120" rx="10" fill="url(#gPurple)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#9e73d1" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#9e73d1" opacity=".85">11:20</text>
     <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">300 ms is too fast to notice — try 500</text>
     <rect x="16" y="66" width="2" height="40" rx="1" fill="#000" fill-opacity=".15"/>
     <text x="28" y="81" class="m" font-size="12.5" fill="#77777f">export const TOAST_DURATION = 300; // ms</text>
@@ -238,9 +238,9 @@
 <g transform="translate(1160,650)">
   <g class="abounce" style="transform-box:fill-box;transform-origin:50% 50%">
   <g class="bbounce" style="transform-box:fill-box;transform-origin:50% 50%">
-    <circle r="13" fill="url(#dotBlue)"/>
-    <circle class="adot" r="13" fill="url(#dotCoral)"/>
-    <circle class="bdot" r="13" fill="url(#dotGreen)"/>
+    <circle r="13" fill="url(#dotCoral)"/>
+    <circle class="adot" r="13" fill="url(#dotBlue)"/>
+    <circle class="bdot" r="13" fill="url(#dotPurple)"/>
   </g></g>
 </g>
   
