@@ -23,7 +23,7 @@ the page you were on, or a screenshot — straight into Obsidian or Apple Notes.
 </div>
 
 <p align="center">
-  <img src="assets/hero.svg" alt="Eureka demo: select text, press Option+T, type one line, press Enter — the thought lands in Obsidian as a colored card with its source" width="880">
+  <img src="assets/hero.svg" alt="Eureka demo: a sentence is selected in a web page, Option+T is pressed, one line is typed and Enter saves it as a colored card in Obsidian with the page as its source; then the same happens in a code editor and a second card lands in the same note" width="880">
 </p>
 
 Ideas show up while you are reading, coding or in a meeting — not while your notes app is open.

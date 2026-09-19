@@ -22,7 +22,7 @@
 </div>
 
 <p align="center">
-  <img src="assets/hero.zh-CN.svg" alt="Eureka 演示：选中文字，按 Option+T，写一句话，回车，想法带着来源以彩色卡片的形式出现在 Obsidian 里" width="880">
+  <img src="assets/hero.zh-CN.svg" alt="Eureka 演示：在网页里选中一句话，按 Option+T，写一句话，回车，想法带着来源以彩色卡片出现在 Obsidian 里；接着在代码编辑器里重复一遍，第二张卡片落进同一篇笔记" width="880">
 </p>
 
 想法总是出现在读文章、写代码、开会的时候，而不是打开笔记软件的时候。为了一句话切换应用，
