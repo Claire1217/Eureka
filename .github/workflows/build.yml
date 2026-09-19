@@ -22,6 +22,8 @@ jobs:
         run: |
           lipo -info Eureka.app/Contents/MacOS/Eureka
           plutil -lint Eureka.app/Contents/Info.plist
+          test -s Eureka.app/Contents/Resources/AppIcon.icns
+          sips -g pixelWidth Eureka.app/Contents/Resources/AppIcon.icns
           codesign --verify --verbose Eureka.app
 
       - uses: actions/upload-artifact@v4

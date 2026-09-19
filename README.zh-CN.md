@@ -1,6 +1,11 @@
 <div align="center">
 
-# Eureka
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-dark.png">
+    <img src="assets/wordmark.png" alt="Eureka" width="340">
+  </picture>
+</h1>
 
 **按下快捷键，写一句话，完事。**
 
