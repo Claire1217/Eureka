@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: swiftc --version
+
+      - name: Build universal app (release.sh)
+        run: ./release.sh
+
+      - name: Check the bundle
+        run: |
+          lipo -info Eureka.app/Contents/MacOS/Eureka
+          plutil -lint Eureka.app/Contents/Info.plist
+          codesign --verify --verbose Eureka.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Eureka-${{ github.sha }}
+          path: Eureka-v*.zip
+          if-no-files-found: error
