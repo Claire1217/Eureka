@@ -135,19 +135,19 @@ xattr -dr com.apple.quarantine /Applications/Eureka.app
 
 ## 配置 AI 快问
 
-在 **E!** → **Settings…** 里填入 API key，`/` 提问就能用了。默认是 DeepSeek，因为便宜、快；
-任何 OpenAI 兼容的 chat completions 接口也都可以：
+在 **E!** → **Settings…** 里填入 OpenAI 兼容的 API Base URL（API 根地址，包含服务商的版本前缀），
+获取或手动输入模型，并按需填写 API key。Eureka 会追加 `/models` 和 `/chat/completions`，不会自动追加 `/v1`。
 
-| 服务 | `llmApiBase` | `llmModel` |
+| 服务 | API Base URL | 模型示例 |
 |---|---|---|
-| DeepSeek（默认） | `https://api.deepseek.com/chat/completions` | `deepseek-chat` |
-| OpenAI | `https://api.openai.com/v1/chat/completions` | 例如 `gpt-4o-mini` |
-| Ollama（本地，数据不出你的 Mac） | `http://localhost:11434/v1/chat/completions` | 例如 `llama3.2` |
+| DeepSeek | `https://api.deepseek.com` | `deepseek-chat` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| Ollama（本地，数据不出你的 Mac） | `http://localhost:11434/v1` | `llama3.2` |
 
 ```bash
-defaults write com.eureka.app llmApiBase "http://localhost:11434/v1/chat/completions"
+defaults write com.eureka.app llmApiBase "http://localhost:11434/v1"
 defaults write com.eureka.app llmModel "llama3.2"
-defaults write com.eureka.app llmApiKey "ollama"     # 本地模型填任意非空值即可
+defaults delete com.eureka.app llmApiKey              # 本地接口允许空 key
 killall Eureka; open /Applications/Eureka.app
 ```
 
@@ -162,8 +162,10 @@ defaults write com.eureka.app llmSystemPrompt "用中文简洁回答，技术术
 ## 隐私
 
 所有内容只写在本地：你的 vault 文件夹，或 Apple 备忘录。Eureka 没有服务器、没有账号、没有统计。
-唯一的联网请求是 `/` 提问（你的问题加上选中的文字），发给你自己配置的接口，并且只在你提问时发生。
-剪贴板里原有的内容永远不会被保存：当某个应用不暴露选中文字时，Eureka 会发一次 ⌘C 来读取，
+联网请求只会发往你自己配置的 API：使用 `/` 提问会发送问题和选中文字；“Fetch Models” 会请求模型列表
+（如已设置，也会携带 API key）；“Test” 会用所选模型发送一个最小的 `hi` 提示。非空 API key 只会
+通过 HTTPS 发送；无需 key 的本地接口可以使用 HTTP。剪贴板里原有的内容永远不会被保存：当某个应用
+不暴露选中文字时，Eureka 会发一次 ⌘C 来读取，
 随后立刻把你原来的剪贴板还原。
 
 <details>

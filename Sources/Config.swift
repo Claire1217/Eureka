@@ -37,6 +37,52 @@ func L(_ zh: String, _ en: String) -> String { prefersChinese ? zh : en }
 
 let THOUGHT_COLORS = ["coral", "blue", "purple", "green", "amber", "olive", "pink", "steel"]
 
+enum LLMAPI {
+    enum EndpointError: Error {
+        case invalidBase
+        case insecureCredential
+    }
+
+    /// The configured value is the API root, including any provider version prefix.
+    /// Legacy full chat-completions endpoints are reduced to that root here.
+    static func normalizedBase(_ input: String) -> String? {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard var components = URLComponents(string: trimmed),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              components.host != nil,
+              components.user == nil,
+              components.password == nil,
+              components.query == nil,
+              components.fragment == nil else { return nil }
+
+        components.scheme = scheme
+        var path = components.percentEncodedPath
+        while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
+        if path.hasSuffix("/chat/completions") {
+            path.removeLast("/chat/completions".count)
+        }
+        while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
+        components.percentEncodedPath = path == "/" ? "" : path
+        return components.string
+    }
+
+    static func endpoint(base: String, path: String) throws -> URL {
+        guard let normalized = normalizedBase(base),
+              let baseURL = URL(string: normalized) else { throw EndpointError.invalidBase }
+        return baseURL.appendingPathComponent(path)
+    }
+
+    static func authorize(_ request: inout URLRequest, apiKey: String) throws {
+        let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return }
+        guard request.url?.scheme?.lowercased() == "https" else {
+            throw EndpointError.insecureCredential
+        }
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+    }
+}
+
 struct EU {
     static let green  = NSColor(red: 0.13, green: 0.77, blue: 0.37, alpha: 1)
     static let red    = NSColor(red: 0.94, green: 0.27, blue: 0.27, alpha: 1)
