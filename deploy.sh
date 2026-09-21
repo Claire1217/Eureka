@@ -28,6 +28,8 @@ else
     echo "Signed with ad-hoc signature"
 fi
 
+refresh_icon /Applications/Eureka.app
+
 echo "=== Launching ==="
 open /Applications/Eureka.app
 sleep 1

@@ -46,6 +46,10 @@ if [ -n "$TC_API_KEY" ]; then
     defaults write com.eureka.app llmApiKey "$TC_API_KEY"
 fi
 
+# Finder and Launchpad cache icons per app; make them look again
+touch /Applications/Eureka.app
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Eureka.app >/dev/null 2>&1 || true
+
 echo "[Eureka] Launching..."
 open /Applications/Eureka.app
 
