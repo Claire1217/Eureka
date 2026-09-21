@@ -38,7 +38,8 @@ thought came from, so the note still makes sense next week.
 Press the hotkey in any app and a small input appears at your cursor. Whatever you had selected is
 quoted under your thought, with the page URL (Safari, Chrome, Edge, Brave, Arc) or the app name
 as the source. Select nothing and it is just a quick note. **Enter** saves, **Esc** cancels —
-you never leave what you were doing.
+you never leave what you were doing. Press the hotkey again while the input is open and it
+closes, the way Spotlight toggles.
 
 <table>
 <tr>
@@ -133,8 +134,8 @@ xattr -dr com.apple.quarantine /Applications/Eureka.app
 
 | | |
 |---|---|
-| <kbd>⌥</kbd> <kbd>T</kbd> | Capture a thought (with the current selection, if any) |
-| <kbd>⌥</kbd> <kbd>R</kbd> | Screenshot a region, then comment |
+| <kbd>⌥</kbd> <kbd>T</kbd> | Capture a thought (with the current selection, if any); press again to dismiss |
+| <kbd>⌥</kbd> <kbd>R</kbd> | Screenshot a region, then comment; press again to dismiss |
 | <kbd>Enter</kbd> | Save — on an empty line, saves just the selection or the screenshot |
 | <kbd>Shift</kbd> <kbd>Enter</kbd> | New line |
 | <kbd>/</kbd> + question | Ask AI instead of saving |

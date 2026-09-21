@@ -35,7 +35,8 @@
 
 在任意应用里按下快捷键，输入框出现在光标旁。你当时选中的文字会作为引用附在想法下面，
 并标注来源网页（Safari、Chrome、Edge、Brave、Arc）或应用名。什么都没选，那就是一条随手记。
-**回车**保存，**Esc** 取消，全程不用离开手头的事。
+**回车**保存，**Esc** 取消，全程不用离开手头的事。输入框还开着时再按一次快捷键就是关闭，
+和 Spotlight 一样来回切换。
 
 <table>
 <tr>
@@ -126,8 +127,8 @@ xattr -dr com.apple.quarantine /Applications/Eureka.app
 
 | | |
 |---|---|
-| <kbd>⌥</kbd> <kbd>T</kbd> | 记录想法（有选中文字就一起带上） |
-| <kbd>⌥</kbd> <kbd>R</kbd> | 框选截图，然后写评论 |
+| <kbd>⌥</kbd> <kbd>T</kbd> | 记录想法（有选中文字就一起带上）；再按一次关闭 |
+| <kbd>⌥</kbd> <kbd>R</kbd> | 框选截图，然后写评论；再按一次关闭 |
 | <kbd>回车</kbd> | 保存；输入框留空时，只保存选中内容或截图 |
 | <kbd>Shift</kbd> <kbd>回车</kbd> | 换行 |
 | <kbd>/</kbd> + 问题 | 问 AI，不保存 |
