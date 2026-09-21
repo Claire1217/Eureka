@@ -285,12 +285,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                     var sel: AnyObject?
                     let r2 = AXUIElementCopyAttributeValue(axEl, kAXSelectedTextAttribute as CFString, &sel)
-                    if r2 == .success, let text = sel as? String {
-                        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !trimmed.isEmpty {
-                            dbg("Got selected text via AX (editable=\(lastSelectionEditable))")
-                            return trimmed
-                        }
+                    if r2 == .success {
+                        let trimmed = (sel as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                        dbg(trimmed.isEmpty
+                            ? "AX reports no selected text"
+                            : "Got selected text via AX (editable=\(lastSelectionEditable))")
+                        return trimmed
                     }
                 }
             }
