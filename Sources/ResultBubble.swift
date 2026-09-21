@@ -46,11 +46,21 @@ final class ShortcutRecorderButton: NSButton {
         guard !isRecordingShortcut else { return }
         isRecordingShortcut = true
         window?.makeFirstResponder(self)
-        (NSApp.delegate as? AppDelegate)?.suspendHotkeysForRecording()
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self = self, self.isRecordingShortcut, event.window === self.window else {
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.suspendHotkeysForRecording()
+            delegate.recordingHotkeyHandler = { [weak self] combination in
+                guard let self = self, self.isRecordingShortcut else { return }
+                self.combination = combination
+                self.finishRecording(message: "Recorded \(hotkeyDisplayName(combination)). Save to apply.")
+            }
+        }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .leftMouseDown]) { [weak self] event in
+            guard let self = self, self.isRecordingShortcut else { return event }
+            if event.type == .leftMouseDown {
+                self.finishRecording(message: "Recording cancelled; previous shortcut restored.", moveFocus: false)
                 return event
             }
+            guard event.window === self.window else { return event }
             self.keyDown(with: event)
             return nil
         }
@@ -128,13 +138,6 @@ final class ShortcutRecorderButton: NSButton {
         finishRecording(message: "Recorded \(hotkeyDisplayName(candidate)). Save to apply.")
     }
 
-    override func resignFirstResponder() -> Bool {
-        if isRecordingShortcut {
-            finishRecording(message: "Recording cancelled; previous shortcut restored.", moveFocus: false)
-        }
-        return super.resignFirstResponder()
-    }
-
     private func finishRecording(message: String, moveFocus: Bool = true) {
         isRecordingShortcut = false
         if let monitor = keyMonitor {
@@ -146,7 +149,10 @@ final class ShortcutRecorderButton: NSButton {
             resignKeyObserver = nil
         }
         refreshDisplay()
-        (NSApp.delegate as? AppDelegate)?.resumeHotkeysAfterRecording()
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.recordingHotkeyHandler = nil
+            delegate.resumeHotkeysAfterRecording()
+        }
         onMessage?(message)
         if moveFocus { window?.makeFirstResponder(nil) }
     }

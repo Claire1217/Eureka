@@ -150,6 +150,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// True when the last registerHotkey() could not claim one of the combinations.
     private(set) var hotkeyRegistrationFailed = false
     private(set) var isRecordingShortcut = false
+    var recordingHotkeyHandler: ((HotkeyCombination) -> Void)?
 
     var storedHotkeyPair: HotkeyPair {
         HotkeyPair(
@@ -553,7 +554,12 @@ func hotKeyHandler(nextHandler: EventHandlerCallRef?, event: EventRef?,
                       EventParamType(typeEventHotKeyID), nil,
                       MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
     let delegate = Unmanaged<AppDelegate>.fromOpaque(ud).takeUnretainedValue()
-    if delegate.isRecordingShortcut { return noErr }
+    if delegate.isRecordingShortcut {
+        let pair = delegate.storedHotkeyPair
+        let combination = hotKeyID.id == 2 ? pair.screenshot : pair.capture
+        DispatchQueue.main.async { delegate.recordingHotkeyHandler?(combination) }
+        return noErr
+    }
     let sel: Selector = hotKeyID.id == 2
         ? #selector(AppDelegate.triggerScreenshot)
         : #selector(AppDelegate.triggerCapture)
