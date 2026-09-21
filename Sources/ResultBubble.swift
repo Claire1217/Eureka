@@ -184,7 +184,7 @@ class ResultBubble {
         }
         settingsTargets.removeAll()
 
-        let W: CGFloat = 420, H: CGFloat = 540
+        let W: CGFloat = 420, H: CGFloat = 660
         let win = NSWindow(contentRect: NSMakeRect(0, 0, W, H),
                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
         win.title = "Eureka Settings"
@@ -327,83 +327,199 @@ class ResultBubble {
         root.addSubview(qaDesc)
         y -= 22
 
-        let apiLabel = NSTextField(labelWithString: "DeepSeek API Key")
+        let baseLabel = NSTextField(labelWithString: "API Base URL")
+        baseLabel.font = .systemFont(ofSize: 12)
+        baseLabel.textColor = .secondaryLabelColor
+        baseLabel.frame = NSMakeRect(px, y - 16, fw, 16)
+        root.addSubview(baseLabel)
+        y -= 20
+
+        let apiBaseField = NSTextField(frame: NSMakeRect(px, y - 22, fw, 22))
+        apiBaseField.placeholderString = "https://api.example.com/v1"
+        apiBaseField.font = .systemFont(ofSize: 12)
+        apiBaseField.identifier = NSUserInterfaceItemIdentifier("llmApiBase")
+        apiBaseField.bezelStyle = .roundedBezel
+        root.addSubview(apiBaseField)
+        y -= 30
+
+        let apiLabel = NSTextField(labelWithString: "API Key (optional for local APIs)")
         apiLabel.font = .systemFont(ofSize: 12)
         apiLabel.textColor = .secondaryLabelColor
         apiLabel.frame = NSMakeRect(px, y - 16, fw, 16)
         root.addSubview(apiLabel)
-        y -= 22
+        y -= 20
 
-        let apiKeyField = NSTextField(frame: NSMakeRect(px, y - 22, fw - 72, 22))
-        apiKeyField.placeholderString = "sk-..."
+        let apiKeyField = NSSecureTextField(frame: NSMakeRect(px, y - 22, fw, 22))
+        apiKeyField.placeholderString = "API key"
         apiKeyField.font = .systemFont(ofSize: 12)
         apiKeyField.identifier = NSUserInterfaceItemIdentifier("llmApiKey")
         apiKeyField.bezelStyle = .roundedBezel
         root.addSubview(apiKeyField)
+        y -= 30
+
+        let modelLabel = NSTextField(labelWithString: "Model")
+        modelLabel.font = .systemFont(ofSize: 12)
+        modelLabel.textColor = .secondaryLabelColor
+        modelLabel.frame = NSMakeRect(px, y - 16, fw, 16)
+        root.addSubview(modelLabel)
+        y -= 20
+
+        let modelField = NSComboBox(frame: NSMakeRect(px, y - 22, fw - 112, 22))
+        modelField.font = .systemFont(ofSize: 12)
+        modelField.identifier = NSUserInterfaceItemIdentifier("llmModel")
+        modelField.isEditable = true
+        root.addSubview(modelField)
+
+        let fetchBtn = NSButton(title: "Fetch Models", target: nil, action: nil)
+        fetchBtn.bezelStyle = .rounded
+        fetchBtn.controlSize = .small
+        fetchBtn.font = .systemFont(ofSize: 11)
+        fetchBtn.frame = NSMakeRect(W - px - 104, y - 23, 104, 24)
+        root.addSubview(fetchBtn)
+        y -= 30
 
         let testBtn = NSButton(title: "Test", target: nil, action: nil)
         testBtn.bezelStyle = .rounded
         testBtn.controlSize = .small
         testBtn.font = .systemFont(ofSize: 11)
-        testBtn.frame = NSMakeRect(W - px - 62, y - 23, 62, 24)
+        testBtn.frame = NSMakeRect(px, y - 23, 62, 24)
         root.addSubview(testBtn)
 
         let testStatus = NSTextField(labelWithString: "")
         testStatus.font = .systemFont(ofSize: 11)
-        testStatus.frame = NSMakeRect(px, y - 38, fw, 14)
+        testStatus.frame = NSMakeRect(px + 70, y - 19, fw - 70, 16)
         testStatus.identifier = NSUserInterfaceItemIdentifier("testStatus")
         root.addSubview(testStatus)
 
-        class TestHandler: NSObject {
+        class APIHandler: NSObject {
+            weak var baseField: NSTextField?
             weak var keyField: NSTextField?
+            weak var modelField: NSComboBox?
             weak var statusLabel: NSTextField?
-            @objc func test(_ sender: Any) {
-                let key = keyField?.stringValue ?? ""
-                guard !key.isEmpty else {
-                    statusLabel?.textColor = .systemOrange
-                    statusLabel?.stringValue = "Please enter an API key first"
-                    return
-                }
-                statusLabel?.textColor = .secondaryLabelColor
-                statusLabel?.stringValue = "Testing…"
 
-                // llmApiBase already includes the /chat/completions path
-                guard let url = URL(string: LocalStorage.shared.llmApiBase) else {
-                    statusLabel?.textColor = .systemRed
-                    statusLabel?.stringValue = "✗ Invalid API base URL"
+            private func request(path: String, method: String) -> URLRequest? {
+                guard let url = try? LLMAPI.endpoint(base: baseField?.stringValue ?? "", path: path) else {
+                    setStatus("✗ Invalid URL — use http(s)://…", color: .systemRed)
+                    return nil
+                }
+                var request = URLRequest(url: url)
+                request.httpMethod = method
+                request.timeoutInterval = 30
+                do {
+                    try LLMAPI.authorize(&request, apiKey: keyField?.stringValue ?? "")
+                } catch {
+                    setStatus("✗ API keys require HTTPS", color: .systemRed)
+                    return nil
+                }
+                return request
+            }
+
+            private func setStatus(_ text: String, color: NSColor) {
+                DispatchQueue.main.async { [weak self] in
+                    self?.statusLabel?.textColor = color
+                    self?.statusLabel?.stringValue = text
+                }
+            }
+
+            @objc func fetchModels(_ sender: Any) {
+                setStatus("Fetching models…", color: .secondaryLabelColor)
+                guard let request = request(path: "models", method: "GET") else { return }
+                URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                    guard let self = self else { return }
+                    if let error = error {
+                        self.setStatus("✗ Network — \(error.localizedDescription)", color: .systemRed)
+                        return
+                    }
+                    guard let http = response as? HTTPURLResponse else {
+                        self.setStatus("✗ No HTTP response", color: .systemRed)
+                        return
+                    }
+                    guard (200...299).contains(http.statusCode) else {
+                        self.setStatus("✗ HTTP \(http.statusCode) — check URL/key", color: .systemRed)
+                        return
+                    }
+                    guard let data = data,
+                          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let entries = json["data"] as? [[String: Any]] else {
+                        self.setStatus("✗ Invalid response — expected data[].id", color: .systemRed)
+                        return
+                    }
+                    let models = Array(Set(entries.compactMap { entry -> String? in
+                        guard let id = entry["id"] as? String else { return nil }
+                        let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+                        return trimmed.isEmpty ? nil : trimmed
+                    })).sorted()
+                    guard !models.isEmpty else {
+                        self.setStatus("✗ No model IDs in data[]", color: .systemRed)
+                        return
+                    }
+                    DispatchQueue.main.async {
+                        let selection = self.modelField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        self.modelField?.removeAllItems()
+                        self.modelField?.addItems(withObjectValues: models)
+                        self.modelField?.stringValue = selection.isEmpty ? models[0] : selection
+                        self.statusLabel?.textColor = .systemGreen
+                        self.statusLabel?.stringValue = "✓ \(models.count) models"
+                    }
+                }.resume()
+            }
+
+            @objc func test(_ sender: Any) {
+                setStatus("Testing…", color: .secondaryLabelColor)
+                let model = modelField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                guard !model.isEmpty else {
+                    setStatus("✗ Enter a model name", color: .systemRed)
                     return
                 }
-                var req = URLRequest(url: url)
-                req.httpMethod = "POST"
-                req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                guard var request = request(path: "chat/completions", method: "POST") else { return }
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 let body: [String: Any] = [
-                    "model": LocalStorage.shared.llmModel,
+                    "model": model,
                     "messages": [["role": "user", "content": "hi"]],
                     "max_tokens": 1
                 ]
-                req.httpBody = try? JSONSerialization.data(withJSONObject: body)
-                let label = self.statusLabel
-                URLSession.shared.dataTask(with: req) { _, resp, err in
-                    DispatchQueue.main.async {
-                        if let http = resp as? HTTPURLResponse, http.statusCode == 200 {
-                            label?.textColor = .systemGreen
-                            label?.stringValue = "✓ Connected"
-                        } else {
-                            label?.textColor = .systemRed
-                            label?.stringValue = "✗ Failed — check your key"
+                request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+                URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                    guard let self = self else { return }
+                    if let error = error {
+                        self.setStatus("✗ Network — \(error.localizedDescription)", color: .systemRed)
+                    } else if let http = response as? HTTPURLResponse,
+                              (200...299).contains(http.statusCode) {
+                        guard let data = data,
+                              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                              let choices = json["choices"] as? [Any],
+                              !choices.isEmpty else {
+                            self.setStatus("✗ Invalid chat-completion response", color: .systemRed)
+                            return
                         }
+                        self.setStatus("✓ Connected", color: .systemGreen)
+                    } else if let http = response as? HTTPURLResponse {
+                        var detail = "check URL/key/model"
+                        if let data = data,
+                           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                           let providerError = json["error"] as? [String: Any],
+                           let message = providerError["message"] as? String,
+                           !message.isEmpty {
+                            detail = message
+                        }
+                        self.setStatus("✗ HTTP \(http.statusCode) — \(detail)", color: .systemRed)
+                    } else {
+                        self.setStatus("✗ No HTTP response", color: .systemRed)
                     }
                 }.resume()
             }
         }
-        let testHandler = TestHandler()
-        testHandler.keyField = apiKeyField
-        testHandler.statusLabel = testStatus
-        testBtn.target = testHandler
-        testBtn.action = #selector(TestHandler.test(_:))
-        settingsTargets.append(testHandler)
-        y -= 42
+        let apiHandler = APIHandler()
+        apiHandler.baseField = apiBaseField
+        apiHandler.keyField = apiKeyField
+        apiHandler.modelField = modelField
+        apiHandler.statusLabel = testStatus
+        fetchBtn.target = apiHandler
+        fetchBtn.action = #selector(APIHandler.fetchModels(_:))
+        testBtn.target = apiHandler
+        testBtn.action = #selector(APIHandler.test(_:))
+        settingsTargets.append(apiHandler)
+        y -= 34
 
         // ━━━━━  HOTKEYS  ━━━━━
         sep(at: &y)
@@ -552,12 +668,32 @@ class ResultBubble {
                 let isObsidian = segValue(in: root, id: "storage") == 0
                 let vaultPath = textField(in: root, id: "vaultPath")?.stringValue ?? ""
                 let backend = isObsidian ? "obsidian" : "notes"
+                let apiBase = textField(in: root, id: "llmApiBase")?.stringValue ?? ""
                 let apiKey = textField(in: root, id: "llmApiKey")?.stringValue ?? ""
+                let model = textField(in: root, id: "llmModel")?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let status = textField(in: root, id: "status")
+                guard let normalizedBase = LLMAPI.normalizedBase(apiBase) else {
+                    status?.textColor = .systemRed
+                    status?.stringValue = "Invalid API Base URL — use http(s)://…"
+                    return
+                }
+                guard !model.isEmpty else {
+                    status?.textColor = .systemRed
+                    status?.stringValue = "Enter a model name."
+                    return
+                }
+                if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                   URL(string: normalizedBase)?.scheme?.lowercased() != "https" {
+                    status?.textColor = .systemRed
+                    status?.stringValue = "API keys require an HTTPS Base URL."
+                    return
+                }
 
                 LocalStorage.shared.vaultPath = vaultPath
                 LocalStorage.shared.backend = backend
-                // Always write, so clearing the field really removes the key
+                LocalStorage.shared.llmApiBase = normalizedBase
                 LocalStorage.shared.llmApiKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                LocalStorage.shared.llmModel = model
 
                 func checkbox(in view: NSView, id: String) -> NSButton? {
                     for sub in view.subviews {
@@ -620,7 +756,6 @@ class ResultBubble {
                     hotkeyFailed = delegate.hotkeyRegistrationFailed
                 }
 
-                let status = textField(in: root, id: "status")
                 if hotkeyFailed {
                     status?.textColor = .systemOrange
                     status?.stringValue = "Saved — but a hotkey could not be registered"
@@ -663,6 +798,8 @@ class ResultBubble {
         if !savedVaultPath.isEmpty {
             textField(in: root, id: "vaultPath")?.stringValue = savedVaultPath
         }
+        textField(in: root, id: "llmApiBase")?.stringValue = LocalStorage.shared.llmApiBase
+        textField(in: root, id: "llmModel")?.stringValue = LocalStorage.shared.llmModel
         let savedKey = LocalStorage.shared.llmApiKey
         if !savedKey.isEmpty {
             textField(in: root, id: "llmApiKey")?.stringValue = savedKey

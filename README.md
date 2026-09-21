@@ -142,19 +142,20 @@ xattr -dr com.apple.quarantine /Applications/Eureka.app
 
 ## Ask AI setup
 
-Paste an API key under **E!** → **Settings…** and `/` questions work. DeepSeek is the default
-because it is cheap and fast; any OpenAI-compatible chat completions endpoint works too:
+Under **E!** → **Settings…**, enter an OpenAI-compatible API base URL (the API root, including
+any version prefix), fetch or type a model, and optionally enter an API key. Eureka appends
+`/models` and `/chat/completions`; it never adds `/v1` automatically.
 
-| Provider | `llmApiBase` | `llmModel` |
+| Provider | API Base URL | Model example |
 |---|---|---|
-| DeepSeek (default) | `https://api.deepseek.com/chat/completions` | `deepseek-chat` |
-| OpenAI | `https://api.openai.com/v1/chat/completions` | e.g. `gpt-4o-mini` |
-| Ollama (local, nothing leaves your Mac) | `http://localhost:11434/v1/chat/completions` | e.g. `llama3.2` |
+| DeepSeek | `https://api.deepseek.com` | `deepseek-chat` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| Ollama (local, nothing leaves your Mac) | `http://localhost:11434/v1` | `llama3.2` |
 
 ```bash
-defaults write com.eureka.app llmApiBase "http://localhost:11434/v1/chat/completions"
+defaults write com.eureka.app llmApiBase "http://localhost:11434/v1"
 defaults write com.eureka.app llmModel "llama3.2"
-defaults write com.eureka.app llmApiKey "ollama"     # any non-empty value for local models
+defaults delete com.eureka.app llmApiKey              # empty keys are allowed for local APIs
 killall Eureka; open /Applications/Eureka.app
 ```
 
@@ -169,9 +170,11 @@ Answers are shown, not saved — if one is worth keeping, capture it as a though
 ## Privacy
 
 Everything is written locally — to your vault folder or to Apple Notes. Eureka has no server,
-no account and no analytics. The only network request it ever makes is a `/` question (your
-question plus the selected text), sent to the endpoint you configured, and only when you ask.
-Whatever was already on your clipboard is never saved: when an app does not expose its selection,
+no account and no analytics. Network requests go only to the API endpoint you configure: asking
+`/` sends your question plus selected text, **Fetch Models** requests the provider's model
+list (including your API key, if set), and **Test** sends a minimal `hi` prompt with the selected
+model. Nonempty API keys are sent only over HTTPS; keyless local APIs may use HTTP. Whatever was
+already on your clipboard is never saved: when an app does not expose its selection,
 Eureka sends a ⌘C to read it and puts your previous clipboard back right after.
 
 <details>

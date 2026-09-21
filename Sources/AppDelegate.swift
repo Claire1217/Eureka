@@ -381,7 +381,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                      screenshotPath: String? = nil) {
         let cleanThought = thought
 
-        // Any "/" prefix → DeepSeek quick Q&A (streaming in panel)
+        // Any "/" prefix → AI quick Q&A (streaming in panel)
         if cleanThought.hasPrefix("/") || cleanThought.hasPrefix("／") {
             let stripped = String(cleanThought.drop(while: { $0 == "/" || $0 == "／" }))
             // Also strip an explicit "ask " / "问 " command word — only when it is
@@ -397,7 +397,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             question = question.trimmingCharacters(in: .whitespaces)
             if question.isEmpty || ["ask", "问"].contains(question.lowercased()) { return }
             capturePanel?.showStreamingAnswer()
-            askDeepSeekStreaming(question: question, context: selectedText)
+            askAIStreaming(question: question, context: selectedText)
             return
         }
         if cleanThought.isEmpty && selectedText.isEmpty && screenshotPath == nil { return }
@@ -433,19 +433,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var streamSession: URLSession?
     private var streamDelegate: StreamingDelegate?
 
-    func askDeepSeekStreaming(question: String, context: String) {
+    func askAIStreaming(question: String, context: String) {
         let storage = LocalStorage.shared
         let apiKey = storage.llmApiKey
         let apiBase = storage.llmApiBase
-        let model = storage.llmModel
-
-        guard !apiKey.isEmpty else {
-            fputs("[Eureka] DeepSeek API key not set\n", stderr)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.capturePanel?.finishStreamWithMessage(L(
-                    "API key 未设置\n\n点击菜单栏 E! → Settings → 填入 API key\nDeepSeek 的 key 在 platform.deepseek.com 获取",
-                    "No API key yet\n\nE! in the menu bar → Settings… → paste your API key\nDeepSeek keys: platform.deepseek.com"))
-            }
+        let model = storage.llmModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !model.isEmpty else {
+            capturePanel?.finishStreamWithMessage(L(
+                "⚠️ 请先在设置中填写模型名称",
+                "⚠️ Enter a model name in Settings first"))
             return
         }
 
@@ -461,13 +457,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let body: [String: Any] = ["model": model, "messages": messages,
                                     "max_tokens": 512, "temperature": 0.7, "stream": true]
 
-        guard let url = URL(string: apiBase),
-              let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
+        guard let url = try? LLMAPI.endpoint(base: apiBase, path: "chat/completions"),
+              let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
+            capturePanel?.finishStreamWithMessage(L(
+                "⚠️ API Base URL 无效（仅支持 http/https）",
+                "⚠️ Invalid API Base URL (http/https only)"))
+            return
+        }
 
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        do {
+            try LLMAPI.authorize(&req, apiKey: apiKey)
+        } catch {
+            capturePanel?.finishStreamWithMessage(L(
+                "⚠️ API key 只能通过 HTTPS 发送",
+                "⚠️ API keys can only be sent over HTTPS"))
+            return
+        }
         req.httpBody = jsonData
         req.timeoutInterval = 60
 
@@ -543,7 +551,7 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
                     guard let self = self, !self.finished else { return }
                     self.finished = true
                     self.panel?.finishStream()
-                    fputs("[Eureka] DeepSeek stream done: \(self.fullAnswer.prefix(80))...\n", stderr)
+                    fputs("[Eureka] AI stream done: \(self.fullAnswer.prefix(80))...\n", stderr)
                 }
                 return
             }
@@ -569,7 +577,7 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
             self.finished = true
             if let err = error {
                 if (err as NSError).code == NSURLErrorCancelled { return }
-                fputs("[Eureka] DeepSeek stream error: \(err.localizedDescription)\n", stderr)
+                fputs("[Eureka] AI stream error: \(err.localizedDescription)\n", stderr)
                 self.panel?.appendStreamChunk("\n⚠️ \(err.localizedDescription)")
                 self.panel?.finishStream()
             } else if self.statusCode != 200 {
@@ -580,7 +588,7 @@ class StreamingDelegate: NSObject, URLSessionDataDelegate {
                    let m = apiError["message"] as? String {
                     msg = m
                 }
-                fputs("[Eureka] DeepSeek HTTP \(self.statusCode): \(msg)\n", stderr)
+                fputs("[Eureka] AI HTTP \(self.statusCode): \(msg)\n", stderr)
                 self.panel?.finishStreamWithMessage("⚠️ API error (HTTP \(self.statusCode))\n\(msg.prefix(300))")
             } else {
                 // Stream ended without [DONE] — show whatever arrived

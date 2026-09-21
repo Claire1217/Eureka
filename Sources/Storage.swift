@@ -25,7 +25,16 @@ class LocalStorage {
     }
 
     var llmApiBase: String {
-        get { UserDefaults.standard.string(forKey: "llmApiBase") ?? "https://api.deepseek.com/chat/completions" }
+        get {
+            let defaults = UserDefaults.standard
+            let stored = defaults.string(forKey: "llmApiBase") ?? "https://api.deepseek.com"
+            if let normalized = LLMAPI.normalizedBase(stored), normalized != stored {
+                // Migrate legacy values that stored the full /chat/completions endpoint.
+                defaults.set(normalized, forKey: "llmApiBase")
+                return normalized
+            }
+            return stored
+        }
         set { UserDefaults.standard.set(newValue, forKey: "llmApiBase") }
     }
 
