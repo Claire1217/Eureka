@@ -7,7 +7,8 @@ source ./common.sh
 DEV_CERT="Eureka Dev"
 
 echo "=== Building ==="
-swiftc Sources/*.swift -o Eureka "${FRAMEWORKS[@]}"
+swift build -c debug
+cp .build/debug/Eureka Eureka
 
 echo "=== Stopping old instances ==="
 killall Eureka 2>/dev/null || true

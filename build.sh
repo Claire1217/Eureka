@@ -19,7 +19,8 @@ fi
 write_plist "$APP" "$VERSION_DEFAULT"
 
 echo "Compiling..."
-swiftc Sources/*.swift -o "$BINARY" "${FRAMEWORKS[@]}"
+swift build -c debug
+cp .build/debug/Eureka "$BINARY"
 
 echo "Signing with '$SIGNING_ID'..."
 codesign --force --sign "$SIGNING_ID" "$APP"

@@ -347,9 +347,14 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         let qY = sv.frame.origin.y + 2
         ql.frame = NSMakeRect(16, qY, pw - 32, 16)
 
-        // Resize to dots phase
+        // Compact loading state: the question starts at the same top inset as
+        // the final answer instead of inheriting the selected-text preview gap.
+        let topPadding: CGFloat = 16
+        let questionH: CGFloat = 16
+        let questionToDots: CGFloat = 12
         let dotsH: CGFloat = 20
-        let totalH = quoteOffsetFromTop + 16 + 12 + dotsH + 12
+        let footerH: CGFloat = 12
+        let totalH = topPadding + questionH + questionToDots + dotsH + footerH
 
         var frame = p.frame
         let dy = totalH - frame.size.height
@@ -358,11 +363,12 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         p.setFrame(frame, display: true)
         c.frame = NSMakeRect(0, 0, pw, totalH)
 
-        repositionTopElements(totalH)
-        let newQY = totalH - quoteOffsetFromTop - 16 - 12
-        ql.frame = NSMakeRect(16, newQY, pw - 32, 16)
+        ctxBoxView?.isHidden = true
+        quoteLabel?.isHidden = true
+        let newQY = totalH - topPadding - questionH
+        ql.frame = NSMakeRect(16, newQY, pw - 32, questionH)
 
-        sv.frame = NSMakeRect(16, 12, pw - 32, dotsH)
+        sv.frame = NSMakeRect(16, footerH, pw - 32, dotsH)
         sv.wantsLayer = true
         sv.layer?.masksToBounds = true
         tv.isEditable = false
@@ -420,19 +426,15 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
             }
         }
 
-        let qOffFromTop = quoteOffsetFromTop + 16 + 12
+        let topPadding: CGFloat = 16
+        let questionH: CGFloat = 16
+        let questionToSeparator: CGFloat = 10
+        let separatorToAnswer: CGFloat = 10
         let footerH: CGFloat = 24
-        let maxAnswerH: CGFloat = 200
+        let maxAnswerH: CGFloat = 260
 
-        let paraStyle = NSMutableParagraphStyle()
-        paraStyle.lineSpacing = 3
-        let answerAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 13),
-            .foregroundColor: EU.body,
-            .paragraphStyle: paraStyle
-        ]
-        let chars = Array(text)
-        var idx = 0
+        let answer = Self.renderMarkdown(text)
+        var revealedLength = 0
 
         streamTimer?.invalidate()
         streamTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) {
@@ -440,16 +442,16 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
             guard let self = self, let tv = tv, let sv = sv, let p = p, let c = c else {
                 timer.invalidate(); return
             }
-            let chunkSize = max(1, chars.count / 60)
-            let end = min(idx + chunkSize, chars.count)
-            let chunk = String(chars[idx..<end])
-            tv.textStorage?.append(NSAttributedString(string: chunk, attributes: answerAttrs))
-            idx = end
+            let chunkSize = max(1, answer.length / 60)
+            revealedLength = min(revealedLength + chunkSize, answer.length)
+            tv.textStorage?.setAttributedString(answer.attributedSubstring(
+                from: NSRange(location: 0, length: revealedLength)))
 
             tv.layoutManager?.ensureLayout(for: tv.textContainer!)
             let usedRect = tv.layoutManager?.usedRect(for: tv.textContainer!) ?? .zero
-            let answerH = max(18, min(ceil(usedRect.height) + 10, maxAnswerH))
-            let totalH = qOffFromTop + 1 + 6 + answerH + footerH
+            let answerH = max(18, min(ceil(usedRect.height) + 4, maxAnswerH))
+            let totalH = topPadding + questionH + questionToSeparator + 1
+                + separatorToAnswer + answerH + footerH
 
             var frame = p.frame
             let dy = totalH - frame.size.height
@@ -460,15 +462,17 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
                 c.frame = NSMakeRect(0, 0, self.pw, totalH)
             }
 
-            self.repositionTopElements(totalH)
-            let qY = totalH - self.quoteOffsetFromTop - 16 - 12
-            self.questionLabel?.frame = NSMakeRect(16, qY, self.pw - 32, 16)
+            self.ctxBoxView?.isHidden = true
+            self.quoteLabel?.isHidden = true
+            let qY = totalH - topPadding - questionH
+            self.questionLabel?.frame = NSMakeRect(16, qY, self.pw - 32, questionH)
 
-            let sepY = qY - 10
+            let sepY = qY - questionToSeparator
             c.subviews.first { $0.identifier?.rawValue == "sep" }?.frame =
                 NSMakeRect(16, sepY, self.pw - 32, 0.5)
 
-            sv.frame = NSMakeRect(16, footerH, self.pw - 32, sepY - 6 - footerH)
+            sv.frame = NSMakeRect(16, footerH, self.pw - 32,
+                                  max(18, sepY - separatorToAnswer - footerH))
             sv.hasVerticalScroller = answerH >= maxAnswerH
 
             self.hintLabel?.isHidden = false
@@ -479,11 +483,15 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
 
             tv.scrollToEndOfDocument(nil)
 
-            if idx >= chars.count {
+            if revealedLength >= answer.length {
                 timer.invalidate()
                 self.streamTimer = nil
             }
         }
+    }
+
+    private static func renderMarkdown(_ text: String) -> NSAttributedString {
+        MarkdownRenderer.render(text)
     }
 
     private static func styledQuestion(_ text: String) -> NSAttributedString {
