@@ -15,6 +15,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         fputs("[Eureka] AX trusted on launch: \(trusted)\n", stderr)
 
         setupMenubar()
+        onKeyboardLayoutChanged = { [weak self] in
+            self?.rebuildMenu()
+            self?.resultBubble?.refreshShortcutLabels()
+        }
         registerHotkey()
         resultBubble = ResultBubble()
         ResultBubble.fetchConfig(sync: true)
@@ -145,42 +149,102 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var eventHandlerInstalled = false
     /// True when the last registerHotkey() could not claim one of the combinations.
     private(set) var hotkeyRegistrationFailed = false
+    private(set) var isRecordingShortcut = false
+    var recordingHotkeyHandler: ((HotkeyCombination) -> Void)?
 
-    func registerHotkey() {
-        // Unregister old hotkeys if re-registering
+    var storedHotkeyPair: HotkeyPair {
+        HotkeyPair(
+            capture: HotkeyCombination(
+                keyCode: UserDefaults.standard.object(forKey: "hotkeyCapture") as? UInt32 ?? HOTKEY_KEYCODE,
+                modifiers: UserDefaults.standard.object(forKey: "hotkeyCaptureMods") as? UInt32 ?? HOTKEY_MODIFIERS),
+            screenshot: HotkeyCombination(
+                keyCode: UserDefaults.standard.object(forKey: "hotkeyScreenshot") as? UInt32 ?? HOTKEY_SCREENSHOT,
+                modifiers: UserDefaults.standard.object(forKey: "hotkeyScreenshotMods") as? UInt32 ?? HOTKEY_MODIFIERS))
+    }
+
+    private func installEventHandlerIfNeeded() {
+        guard !eventHandlerInstalled else { return }
+        var eventType = EventTypeSpec()
+        eventType.eventClass = OSType(kEventClassKeyboard)
+        eventType.eventKind = UInt32(kEventHotKeyPressed)
+        InstallEventHandler(
+            GetApplicationEventTarget(), hotKeyHandler, 1, &eventType,
+            UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()), nil)
+        eventHandlerInstalled = true
+    }
+
+    private func unregisterHotkeys() {
         if let ref = hotKeyRef { UnregisterEventHotKey(ref); hotKeyRef = nil }
         if let ref = hotKeyScreenshotRef { UnregisterEventHotKey(ref); hotKeyScreenshotRef = nil }
+    }
 
-        if !eventHandlerInstalled {
-            var eventType = EventTypeSpec()
-            eventType.eventClass = OSType(kEventClassKeyboard)
-            eventType.eventKind = UInt32(kEventHotKeyPressed)
-            InstallEventHandler(
-                GetApplicationEventTarget(), hotKeyHandler, 1, &eventType,
-                UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()), nil)
-            eventHandlerInstalled = true
+    @discardableResult
+    private func registerHotkeyPair(_ pair: HotkeyPair) -> Bool {
+        installEventHandlerIfNeeded()
+
+        var captureID = EventHotKeyID()
+        captureID.signature = OSType(0x54435F48)
+        captureID.id = 1
+        let captureStatus = RegisterEventHotKey(
+            pair.capture.keyCode, pair.capture.modifiers, captureID,
+            GetApplicationEventTarget(), 0, &hotKeyRef)
+
+        var screenshotStatus = OSStatus(eventHotKeyExistsErr)
+        if captureStatus == noErr {
+            var screenshotID = EventHotKeyID()
+            screenshotID.signature = OSType(0x54435F48)
+            screenshotID.id = 2
+            screenshotStatus = RegisterEventHotKey(
+                pair.screenshot.keyCode, pair.screenshot.modifiers, screenshotID,
+                GetApplicationEventTarget(), 0, &hotKeyScreenshotRef)
         }
 
-        let captureKey = UserDefaults.standard.object(forKey: "hotkeyCapture") as? UInt32 ?? HOTKEY_KEYCODE
-        let captureMods = UserDefaults.standard.object(forKey: "hotkeyCaptureMods") as? UInt32 ?? HOTKEY_MODIFIERS
-        let screenshotKey = UserDefaults.standard.object(forKey: "hotkeyScreenshot") as? UInt32 ?? HOTKEY_SCREENSHOT
-        let screenshotMods = UserDefaults.standard.object(forKey: "hotkeyScreenshotMods") as? UInt32 ?? HOTKEY_MODIFIERS
+        if captureStatus != noErr {
+            fputs("[Eureka] Failed to register capture hotkey (OSStatus \(captureStatus))\n", stderr)
+        }
+        if captureStatus == noErr && screenshotStatus != noErr {
+            fputs("[Eureka] Failed to register screenshot hotkey (OSStatus \(screenshotStatus))\n", stderr)
+        }
+        let succeeded = captureStatus == noErr && screenshotStatus == noErr
+        if !succeeded { unregisterHotkeys() }
+        return succeeded
+    }
 
-        var hotKeyID1 = EventHotKeyID()
-        hotKeyID1.signature = OSType(0x54435F48)
-        hotKeyID1.id = 1
-        let s1 = RegisterEventHotKey(captureKey, captureMods, hotKeyID1,
-                                     GetApplicationEventTarget(), 0, &hotKeyRef)
+    func registerHotkey() {
+        unregisterHotkeys()
+        hotkeyRegistrationFailed = !registerHotkeyPair(storedHotkeyPair)
+    }
 
-        var hotKeyID2 = EventHotKeyID()
-        hotKeyID2.signature = OSType(0x54435F48)
-        hotKeyID2.id = 2
-        let s2 = RegisterEventHotKey(screenshotKey, screenshotMods, hotKeyID2,
-                                     GetApplicationEventTarget(), 0, &hotKeyScreenshotRef)
-        // e.g. eventHotKeyExistsErr when another app already owns the combination
-        hotkeyRegistrationFailed = (s1 != noErr || s2 != noErr)
-        if s1 != noErr { fputs("[Eureka] Failed to register capture hotkey (OSStatus \(s1))\n", stderr) }
-        if s2 != noErr { fputs("[Eureka] Failed to register screenshot hotkey (OSStatus \(s2))\n", stderr) }
+    /// Temporarily replaces the live pair, restoring the prior registrations on failure.
+    /// Defaults are only written after both Carbon registrations succeed.
+    func replaceHotkeys(with pair: HotkeyPair) -> Bool {
+        let prior = storedHotkeyPair
+        unregisterHotkeys()
+        if registerHotkeyPair(pair) {
+            UserDefaults.standard.set(pair.capture.keyCode, forKey: "hotkeyCapture")
+            UserDefaults.standard.set(pair.capture.modifiers, forKey: "hotkeyCaptureMods")
+            UserDefaults.standard.set(pair.screenshot.keyCode, forKey: "hotkeyScreenshot")
+            UserDefaults.standard.set(pair.screenshot.modifiers, forKey: "hotkeyScreenshotMods")
+            hotkeyRegistrationFailed = false
+            return true
+        }
+
+        unregisterHotkeys()
+        let restored = registerHotkeyPair(prior)
+        hotkeyRegistrationFailed = !restored
+        if !restored {
+            fputs("[Eureka] Failed to restore the previous hotkey registrations\n", stderr)
+        }
+        return false
+    }
+
+    /// Keep the established registrations claimed while recording, but ignore their callbacks.
+    func suspendHotkeysForRecording() {
+        isRecordingShortcut = true
+    }
+
+    func resumeHotkeysAfterRecording() {
+        isRecordingShortcut = false
     }
 
     // MARK: Capture Flow
@@ -490,6 +554,12 @@ func hotKeyHandler(nextHandler: EventHandlerCallRef?, event: EventRef?,
                       EventParamType(typeEventHotKeyID), nil,
                       MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
     let delegate = Unmanaged<AppDelegate>.fromOpaque(ud).takeUnretainedValue()
+    if delegate.isRecordingShortcut {
+        let pair = delegate.storedHotkeyPair
+        let combination = hotKeyID.id == 2 ? pair.screenshot : pair.capture
+        DispatchQueue.main.async { delegate.recordingHotkeyHandler?(combination) }
+        return noErr
+    }
     let sel: Selector = hotKeyID.id == 2
         ? #selector(AppDelegate.triggerScreenshot)
         : #selector(AppDelegate.triggerCapture)
