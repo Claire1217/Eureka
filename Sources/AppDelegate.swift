@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         registerHotkey()
         resultBubble = ResultBubble()
         ResultBubble.fetchConfig(sync: true)
+        TagHistory.shared.refreshFromObsidian(at: LocalStorage.shared.vaultPath)
         setupSelectionToolbar()
 
         if !trusted {
@@ -415,6 +416,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 thought: cleanThought, selectedText: quote,
                 appName: appName, browserURL: browserURL,
                 screenshotPath: screenshotPath)
+            if result.ok { TagHistory.shared.recordTags(in: cleanThought) }
             DispatchQueue.main.async {
                 // A screenshot may be saved without a comment
                 let label = cleanThought.isEmpty ? "Screenshot" : cleanThought
