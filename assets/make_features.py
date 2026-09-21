@@ -3,6 +3,7 @@
 
     feature-screenshot[.zh-CN].svg   ⌥R → drag a region → one line → card with image
     feature-ask[.zh-CN].svg          select → ⌥T → "/ question" → answer in the panel
+    feature-dot[.zh-CN].svg          select with the mouse → blue dot → click → one line → card
 
 Same approach as make_hero.py: pure SVG + CSS keyframes, no scripts.
 Run:  python3 assets/make_features.py        (English)
@@ -137,6 +138,9 @@ def document(anim, body, aria, blobs):
   @media (prefers-reduced-motion:reduce){{*{{animation:none!important}}}}</style>
   <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">{blobs[0]}</linearGradient>
   <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecf9f2"/><stop offset="1" stop-color="#e3f3ef"/></linearGradient>
+  <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9f3fc"/><stop offset="1" stop-color="#e6ebfa"/></linearGradient>
+  <linearGradient id="dotFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc7f2"/><stop offset="1" stop-color="#6180d9"/></linearGradient>
+  <filter id="dotShadow" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="1" stdDeviation="1.6" flood-color="#000" flood-opacity=".22"/></filter>
   <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6180d9" stop-opacity=".22"/><stop offset="1" stop-color="#6180d9" stop-opacity="0"/></linearGradient>
   <filter id="winShadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#5b5b8a" flood-opacity=".16"/></filter>
   <filter id="panelShadow" x="-15%" y="-30%" width="130%" height="170%"><feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#2b2b55" flood-opacity=".24"/></filter>
@@ -160,6 +164,9 @@ S = {
         shot_placeholder="Jot a thought… or / to ask AI",
         shot_aria="Eureka screenshot capture: press Option+R, drag a region, type one line, press Enter. "
                   "The screenshot and the comment are saved together as one card.",
+        dot_thought=("every onboarding step spends attention — cut two", 318),
+        dot_aria="Eureka capture dot: text is selected with the mouse and a small blue dot appears next to the pointer. "
+                 "Clicking it opens the capture panel with the selection attached; one line is typed and Enter saves the card.",
         ask_q=("what does p95 mean?", 138),
         ask_answer=["95% of requests finished within 840 ms; the",
                     "slowest 5% took longer. It measures tail latency,",
@@ -172,6 +179,9 @@ S = {
         shot_placeholder="记个想法… 或 /指令 问AI",
         shot_aria="Eureka 截图捕获：按 Option+R，框选一块区域，写一句话，回车。"
                   "截图和评论会作为同一张卡片保存。",
+        dot_thought=("onboarding 每多一步，都在花用户的注意力", 288),
+        dot_aria="Eureka 小蓝点：用鼠标选中文字后，指针旁边出现一个小蓝点。"
+                 "点一下就打开输入面板并带上选中的文字，写一句话，回车保存成卡片。",
         ask_q=("p95 是什么意思？", 118),
         ask_answer=["95% 的请求在 840 ms 内完成，最慢的 5% 更久。",
                     "它衡量的是 tail latency，",
@@ -381,8 +391,111 @@ def ask_scene():
     return document(a, scene, S["ask_aria"], blobs)
 
 
+# ───────────────────────── scene 3: the capture dot ─────────────────────────
+# Follows SelectionToolbar.swift: after a drag-selection the 14 px dot fades in 0.25 s later, below and
+# to the right of the pointer; the pointer becomes a hand over it; a click opens the capture panel.
+HAND = ('M6 1.6a1.6 1.6 0 0 1 3.2 0V8.2l4.7.9c1 .2 1.7 1.1 1.6 2.1l-.6 5.1a2.5 2.5 0 0 1-2.5 2.2H8.3'
+        'a2.5 2.5 0 0 1-2-1l-3.9-5.2a1.5 1.5 0 0 1 2.3-1.9L6 11.8z')
+
+
+def dot_scene():
+    a = Anim(9.6)
+    SEL0, SEL1 = 0.5, 1.4
+    DOT_IN, TO_DOT, CLICK = 1.65, 2.1, 2.9
+    PANEL_IN, TYPE0, TYPE1 = 3.0, 3.6, 5.4
+    RET_IN, RET_PRESS, RET_OUT = 5.5, 5.8, 6.35
+    PANEL_OUT, CARD_IN, RESET = 6.0, 6.2, 9.0
+    text, tw = S["dot_thought"]
+    quote = "Attention is the scarcest resource a product can spend."
+    END, DOT = (416, 156), (436, 176)          # pointer at mouse-up; dot centre = pointer + (20, 20)
+
+    a.track("cur", [
+        (0.0, {"transform": "translate(300px,236px)"}, EASE_IO),
+        (SEL0, {"transform": "translate(26px,150px)"}, EASE_IO),
+        (SEL1, {"transform": f"translate({END[0]}px,{END[1]}px)"}),
+        (TO_DOT, {"transform": f"translate({END[0]}px,{END[1]}px)"}, EASE_IO),
+        (TO_DOT + 0.5, {"transform": f"translate({DOT[0] + 2}px,{DOT[1] + 3}px)"}),
+        (RESET - 0.3, {"transform": f"translate({DOT[0] + 2}px,{DOT[1] + 3}px)"}, EASE_IO),
+        (a.T, {"transform": "translate(300px,236px)"}),
+    ])
+    hover0 = TO_DOT + 0.4
+    a.track("arrow", [(0, {"opacity": 1}), (hover0, {"opacity": 1}), (hover0 + 0.01, {"opacity": 0}),
+                      (CLICK + 0.15, {"opacity": 0}), (CLICK + 0.16, {"opacity": 1})])
+    a.track("hand", [(0, {"opacity": 0}), (hover0, {"opacity": 0}), (hover0 + 0.01, {"opacity": 1}),
+                     (CLICK + 0.15, {"opacity": 1}), (CLICK + 0.16, {"opacity": 0})])
+    a.track("sel", [
+        (SEL0, {"transform": "scaleX(0)", "opacity": 1}, EASE_IO),
+        (SEL1, {"transform": "scaleX(1)", "opacity": 1}),
+        (PANEL_OUT + 0.2, {"transform": "scaleX(1)", "opacity": 1}),
+        (PANEL_OUT + 0.6, {"transform": "scaleX(1)", "opacity": 0}),
+        (a.T, {"transform": "scaleX(0)", "opacity": 0}),
+    ])
+    a.track("bluedot", [
+        (DOT_IN, {"opacity": 0}),
+        (DOT_IN + 0.15, {"opacity": 1}),
+        (CLICK, {"opacity": 1}),
+        (CLICK + 0.01, {"opacity": 0}),
+    ])
+    a.keypress("ret", RET_IN, RET_PRESS, RET_OUT)
+    a.pop("panel", PANEL_IN, PANEL_OUT)
+    a.fade("ph", PANEL_IN, TYPE0 - 0.05, 0.3, 0.05)
+    a.wipe("wipe", TYPE0, TYPE1, tw + 6, PANEL_OUT + 0.3)
+    a.track("card", [
+        (CARD_IN - 0.001, {"opacity": 0, "transform": "translateY(20px) scale(.97)"}, SPRING),
+        (CARD_IN + 0.55, {"opacity": 1, "transform": "translateY(0) scale(1)"}),
+        (RESET, {"opacity": 1, "transform": "translateY(0) scale(1)"}, EASE_IO),
+        (RESET + 0.4, {"opacity": 0, "transform": "translateY(0) scale(1)"}),
+    ])
+    a.css.append(".ret,.panel,.ph,.bluedot,.hand,.card{opacity:0}")
+
+    body = f'''
+  {bar(28, 62, 210, 12, "#d4d4dc")}
+  {bar(28, 92, 470)}{bar(28, 108, 440)}{bar(28, 124, 400)}
+  <g transform="translate(24,142)"><rect class="sel" width="396" height="26" rx="5" fill="#6180d9" fill-opacity=".24"
+      style="transform-box:fill-box;transform-origin:0 50%"/></g>
+  <text x="28" y="160" class="t" font-size="14.5" fill="#2b2b2f" textLength="388" lengthAdjust="spacingAndGlyphs">{quote}</text>
+  {bar(28, 186, 460)}{bar(28, 202, 380)}{bar(28, 218, 430)}{bar(28, 234, 300)}{bar(28, 262, 440)}{bar(28, 278, 210)}'''
+
+    scene = f'''
+  {window(body, "productnotes.example/attention")}
+  <g transform="translate(30,26)"><circle class="bluedot" cx="{DOT[0]}" cy="{DOT[1]}" r="7" fill="url(#dotFill)" filter="url(#dotShadow)"/></g>
+  <g transform="translate(80,214)"><g class="panel" style="transform-box:fill-box;transform-origin:50% 0">
+    <rect width="440" height="92" rx="13" fill="#fff" filter="url(#panelShadow)"/>
+    <rect x="12" y="11" width="416" height="26" rx="8" fill="#000" fill-opacity=".04"/>
+    <text x="22" y="28.5" class="t" font-size="11.5" fill="#8c8c92">{quote}</text>
+    <clipPath id="in4"><rect x="12" y="44" width="416" height="32"/></clipPath>
+    <g clip-path="url(#in4)">
+      <text x="17" y="66" class="t" font-size="14" fill="#55555c" textLength="{tw}" lengthAdjust="spacingAndGlyphs">{text}</text>
+      <g class="wipe"><rect x="16" y="46" width="420" height="28" fill="#fff"/>
+        <rect class="caret" x="17" y="51" width="1.6" height="19" rx=".8" fill="#6180d9"/></g>
+    </g>
+    <text class="t ph" x="22" y="66" font-size="14" fill="#b9b9c0">{S["shot_placeholder"]}</text>
+    <text x="428" y="84" class="t" font-size="10" fill="#b9b9c0" text-anchor="end">↵ save · esc</text>
+  </g></g>
+  <g transform="translate(72,150)"><g class="card" style="transform-box:fill-box;transform-origin:50% 50%">
+    <rect width="456" height="120" rx="12" fill="#fff" filter="url(#panelShadow)"/>
+    <rect width="456" height="120" rx="12" fill="url(#gBlue)"/>
+    <path d="{SPARK}" transform="translate(16,14)" fill="#6180d9" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#6180d9" opacity=".85">15:07</text>
+    <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">{text}</text>
+    <rect x="16" y="66" width="2" height="40" rx="1" fill="#000" fill-opacity=".15"/>
+    <text x="28" y="81" class="t" font-size="12.5" font-style="italic" fill="#77777f">{quote}</text>
+    <text x="28" y="100" class="t" font-size="12.5" fill="#77777f">【<tspan fill="#7a6ad8" text-decoration="underline">productnotes.example/attention</tspan>】</text>
+  </g></g>
+  <g transform="translate(300,346)"><g class="ret">{keycap(-38, 76, RET)}</g></g>
+  <g transform="translate(30,26)"><g class="cur">
+    <path class="arrow" d="M0 0v17l4.6-4.2 3 7 2.6-1.1-3-6.9H13z" fill="#1f1f24" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+    <path class="hand" d="{HAND}" transform="translate(-7.6,-1)" fill="#fff" stroke="#1f1f24" stroke-width="1.3" stroke-linejoin="round"/>
+  </g></g>'''
+    blobs = ('<stop offset="0" stop-color="#eef5ff"/><stop offset=".55" stop-color="#f4f4ff"/><stop offset="1" stop-color="#fdf3f6"/>',
+             '<circle cx="80" cy="70" r="120" fill="#8cc7f2" opacity=".30" filter="url(#blur)"/>'
+             '<circle cx="540" cy="370" r="110" fill="#c9b3f2" opacity=".24" filter="url(#blur)"/>')
+    return document(a, scene, S["dot_aria"], blobs)
+
+
 here = Path(__file__).parent
-for name, svg in (("feature-screenshot", screenshot_scene()), ("feature-ask", ask_scene())):
+for name, svg in (("feature-screenshot", screenshot_scene()), ("feature-ask", ask_scene()),
+                  ("feature-dot", dot_scene())):
     out = here / f"{name}{SUFFIX}.svg"
     out.write_text(svg, encoding="utf-8")
     print(f"wrote {out.name} ({len(svg) / 1024:.1f} KB)")

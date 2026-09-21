@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" role="img" aria-label="Eureka capture dot: text is selected with the mouse and a small blue dot appears next to the pointer. Clicking it opens the capture panel with the selection attached; one line is typed and Enter saves the card.">
+<defs>
+  <style>.t{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Helvetica Neue",Arial,sans-serif}@keyframes cur{0.00%{transform:translate(300px,236px);animation-timing-function:cubic-bezier(.45,0,.25,1)}5.21%{transform:translate(26px,150px);animation-timing-function:cubic-bezier(.45,0,.25,1)}14.58%{transform:translate(416px,156px)}21.88%{transform:translate(416px,156px);animation-timing-function:cubic-bezier(.45,0,.25,1)}27.08%{transform:translate(438px,179px)}90.62%{transform:translate(438px,179px);animation-timing-function:cubic-bezier(.45,0,.25,1)}100.00%{transform:translate(300px,236px)}}.cur{animation:cur 9.6s linear infinite}@keyframes arrow{0.00%{opacity:1}26.04%{opacity:1}26.15%{opacity:0}31.77%{opacity:0}31.88%{opacity:1}100.00%{opacity:1}}.arrow{animation:arrow 9.6s linear infinite}@keyframes hand{0.00%{opacity:0}26.04%{opacity:0}26.15%{opacity:1}31.77%{opacity:1}31.88%{opacity:0}100.00%{opacity:0}}.hand{animation:hand 9.6s linear infinite}@keyframes sel{0.00%{transform:scaleX(0);opacity:1}5.21%{transform:scaleX(0);opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}14.58%{transform:scaleX(1);opacity:1}64.58%{transform:scaleX(1);opacity:1}68.75%{transform:scaleX(1);opacity:0}100.00%{transform:scaleX(0);opacity:0}}.sel{animation:sel 9.6s linear infinite}@keyframes bluedot{0.00%{opacity:0}17.19%{opacity:0}18.75%{opacity:1}30.21%{opacity:1}30.31%{opacity:0}100.00%{opacity:0}}.bluedot{animation:bluedot 9.6s linear infinite}@keyframes ret{0.00%{opacity:0;transform:translateY(8px)}57.28%{opacity:0;transform:translateY(8px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}59.38%{opacity:1;transform:translateY(0)}60.42%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.2,1)}61.46%{opacity:1;transform:translateY(4px)}63.54%{opacity:1;transform:translateY(0)}66.15%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.45,0,.25,1)}69.27%{opacity:0;transform:translateY(0)}100.00%{opacity:0;transform:translateY(0)}}.ret{animation:ret 9.6s linear infinite}@keyframes panel{0.00%{opacity:0;transform:translateY(10px) scale(.96)}31.24%{opacity:0;transform:translateY(10px) scale(.96);animation-timing-function:cubic-bezier(.2,.8,.2,1)}34.38%{opacity:1;transform:translateY(0) scale(1)}62.50%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.45,0,.25,1)}65.10%{opacity:0;transform:translateY(-6px) scale(.98)}100.00%{opacity:0;transform:translateY(-6px) scale(.98)}}.panel{animation:panel 9.6s linear infinite}@keyframes ph{0.00%{opacity:0}31.24%{opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}34.38%{opacity:1}36.98%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.25,1)}37.50%{opacity:0}100.00%{opacity:0}}.ph{animation:ph 9.6s linear infinite}@keyframes wipe{0.00%{transform:translateX(0)}37.50%{transform:translateX(0)}56.25%{transform:translateX(324px)}65.62%{transform:translateX(324px)}65.73%{transform:translateX(0)}100.00%{transform:translateX(0)}}.wipe{animation:wipe 9.6s linear infinite}@keyframes card{0.00%{opacity:0;transform:translateY(20px) scale(.97)}64.57%{opacity:0;transform:translateY(20px) scale(.97);animation-timing-function:cubic-bezier(.3,1.5,.5,1)}70.31%{opacity:1;transform:translateY(0) scale(1)}93.75%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.45,0,.25,1)}97.92%{opacity:0;transform:translateY(0) scale(1)}100.00%{opacity:0;transform:translateY(0) scale(1)}}.card{animation:card 9.6s linear infinite}.ret,.panel,.ph,.bluedot,.hand,.card{opacity:0}
+  @keyframes blink{0%,55%{opacity:1}56%,100%{opacity:0}}.caret{animation:blink 1s steps(1) infinite}
+  @keyframes dot{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  .d1{animation:dot 1.2s infinite}.d2{animation:dot 1.2s .2s infinite}.d3{animation:dot 1.2s .4s infinite}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}</style>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef5ff"/><stop offset=".55" stop-color="#f4f4ff"/><stop offset="1" stop-color="#fdf3f6"/></linearGradient>
+  <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecf9f2"/><stop offset="1" stop-color="#e3f3ef"/></linearGradient>
+  <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9f3fc"/><stop offset="1" stop-color="#e6ebfa"/></linearGradient>
+  <linearGradient id="dotFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc7f2"/><stop offset="1" stop-color="#6180d9"/></linearGradient>
+  <filter id="dotShadow" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="1" stdDeviation="1.6" flood-color="#000" flood-opacity=".22"/></filter>
+  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6180d9" stop-opacity=".22"/><stop offset="1" stop-color="#6180d9" stop-opacity="0"/></linearGradient>
+  <filter id="winShadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#5b5b8a" flood-opacity=".16"/></filter>
+  <filter id="panelShadow" x="-15%" y="-30%" width="130%" height="170%"><feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#2b2b55" flood-opacity=".24"/></filter>
+  <filter id="aiShadow" x="-15%" y="-30%" width="130%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#8c5cd9" flood-opacity=".30"/></filter>
+  <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="45"/></filter>
+  <clipPath id="frame"><rect width="600" height="420" rx="22"/></clipPath>
+</defs>
+<g clip-path="url(#frame)">
+  <rect width="600" height="420" fill="url(#bg)"/>
+  <circle cx="80" cy="70" r="120" fill="#8cc7f2" opacity=".30" filter="url(#blur)"/><circle cx="540" cy="370" r="110" fill="#c9b3f2" opacity=".24" filter="url(#blur)"/>
+  
+  
+<g transform="translate(30,26)">
+  <rect width="540" height="300" rx="13" fill="#fff" filter="url(#winShadow)"/>
+  <path d="M0 13a13 13 0 0 1 13-13h514a13 13 0 0 1 13 13v23H0z" fill="#f7f7f9"/>
+  <rect y="36" width="540" height="1" fill="#ececf0"/><circle cx="18" cy="18" r="5" fill="#ff5f57"/><circle cx="34" cy="18" r="5" fill="#febc2e"/><circle cx="50" cy="18" r="5" fill="#28c840"/>
+  <rect x="160" y="8" width="220" height="20" rx="10" fill="#f1f1f4"/>
+  <text x="270" y="22" class="t" font-size="11" fill="#8c8c92" text-anchor="middle">productnotes.example/attention</text>
+  
+  <rect x="28" y="62" width="210" height="12" rx="6.0" fill="#d4d4dc"/>
+  <rect x="28" y="92" width="470" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="108" width="440" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="124" width="400" height="8" rx="4.0" fill="#e9e9ee"/>
+  <g transform="translate(24,142)"><rect class="sel" width="396" height="26" rx="5" fill="#6180d9" fill-opacity=".24"
+      style="transform-box:fill-box;transform-origin:0 50%"/></g>
+  <text x="28" y="160" class="t" font-size="14.5" fill="#2b2b2f" textLength="388" lengthAdjust="spacingAndGlyphs">Attention is the scarcest resource a product can spend.</text>
+  <rect x="28" y="186" width="460" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="202" width="380" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="218" width="430" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="234" width="300" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="262" width="440" height="8" rx="4.0" fill="#e9e9ee"/><rect x="28" y="278" width="210" height="8" rx="4.0" fill="#e9e9ee"/>
+</g>
+  <g transform="translate(30,26)"><circle class="bluedot" cx="436" cy="176" r="7" fill="url(#dotFill)" filter="url(#dotShadow)"/></g>
+  <g transform="translate(80,214)"><g class="panel" style="transform-box:fill-box;transform-origin:50% 0">
+    <rect width="440" height="92" rx="13" fill="#fff" filter="url(#panelShadow)"/>
+    <rect x="12" y="11" width="416" height="26" rx="8" fill="#000" fill-opacity=".04"/>
+    <text x="22" y="28.5" class="t" font-size="11.5" fill="#8c8c92">Attention is the scarcest resource a product can spend.</text>
+    <clipPath id="in4"><rect x="12" y="44" width="416" height="32"/></clipPath>
+    <g clip-path="url(#in4)">
+      <text x="17" y="66" class="t" font-size="14" fill="#55555c" textLength="318" lengthAdjust="spacingAndGlyphs">every onboarding step spends attention — cut two</text>
+      <g class="wipe"><rect x="16" y="46" width="420" height="28" fill="#fff"/>
+        <rect class="caret" x="17" y="51" width="1.6" height="19" rx=".8" fill="#6180d9"/></g>
+    </g>
+    <text class="t ph" x="22" y="66" font-size="14" fill="#b9b9c0">Jot a thought… or / to ask AI</text>
+    <text x="428" y="84" class="t" font-size="10" fill="#b9b9c0" text-anchor="end">↵ save · esc</text>
+  </g></g>
+  <g transform="translate(72,150)"><g class="card" style="transform-box:fill-box;transform-origin:50% 50%">
+    <rect width="456" height="120" rx="12" fill="#fff" filter="url(#panelShadow)"/>
+    <rect width="456" height="120" rx="12" fill="url(#gBlue)"/>
+    <path d="M6 0 L7.4 4.6 L12 6 L7.4 7.4 L6 12 L4.6 7.4 L0 6 L4.6 4.6 Z M11.5 0.5 l.6 1.6 1.6 .6 -1.6 .6 -.6 1.6 -.6 -1.6 -1.6 -.6 1.6 -.6 Z" transform="translate(16,14)" fill="#6180d9" opacity=".7"/>
+    <text x="35" y="25" class="t" font-size="11.5" fill="#6180d9" opacity=".85">15:07</text>
+    <text x="16" y="52" class="t" font-size="14" fill="#2b2b2f">every onboarding step spends attention — cut two</text>
+    <rect x="16" y="66" width="2" height="40" rx="1" fill="#000" fill-opacity=".15"/>
+    <text x="28" y="81" class="t" font-size="12.5" font-style="italic" fill="#77777f">Attention is the scarcest resource a product can spend.</text>
+    <text x="28" y="100" class="t" font-size="12.5" fill="#77777f">【<tspan fill="#7a6ad8" text-decoration="underline">productnotes.example/attention</tspan>】</text>
+  </g></g>
+  <g transform="translate(300,346)"><g class="ret"><g transform="translate(-38,0)"><rect y="4" width="76" height="48" rx="11" fill="#d9d9e2"/><rect width="76" height="48" rx="11" fill="#fff" stroke="#e3e3ea"/><path d="M50 16v10a4 4 0 0 1-4 4H26m0 0 6-6m-6 6 6 6" fill="none" stroke="#55555c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></g></g>
+  <g transform="translate(30,26)"><g class="cur">
+    <path class="arrow" d="M0 0v17l4.6-4.2 3 7 2.6-1.1-3-6.9H13z" fill="#1f1f24" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+    <path class="hand" d="M6 1.6a1.6 1.6 0 0 1 3.2 0V8.2l4.7.9c1 .2 1.7 1.1 1.6 2.1l-.6 5.1a2.5 2.5 0 0 1-2.5 2.2H8.3a2.5 2.5 0 0 1-2-1l-3.9-5.2a1.5 1.5 0 0 1 2.3-1.9L6 11.8z" transform="translate(-7.6,-1)" fill="#fff" stroke="#1f1f24" stroke-width="1.3" stroke-linejoin="round"/>
+  </g></g>
+</g>
+</svg>

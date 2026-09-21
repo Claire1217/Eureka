@@ -68,9 +68,27 @@ copy-paste. Bring your own key: DeepSeek, OpenAI, or a local model through Ollam
 </tr>
 </table>
 
+<table>
+<tr>
+<td width="50%">
+
+<img src="assets/feature-dot.svg" alt="Capture dot: text is selected with the mouse, a small blue dot appears next to the pointer, a click on it opens the capture panel with the selection attached, one line is typed and Enter saves the card" width="100%">
+
+</td>
+<td width="50%" valign="middle">
+
+### Or skip the hotkey: click the dot
+
+Select text with the mouse and a small blue dot appears next to the pointer. Click it and the
+same panel opens with your selection already attached — handy when your hand is on the mouse
+anyway. Ignore it and it fades away after a few seconds. It can be turned off in Settings.
+
+</td>
+</tr>
+</table>
+
 **Also in the box**
 
-- **Capture dot** — select text with the mouse and a small blue dot appears next to it; click it instead of reaching for the hotkey. Can be turned off in Settings.
 - **Recent captures** — the floating bubble keeps your last 20 thoughts; click one to jump to it in Obsidian.
 - **Obsidian or Apple Notes** — plain Markdown in your vault, or a daily note in Notes.
 - **Yours to rebind** — both hotkeys are configurable, and every setting is scriptable.
