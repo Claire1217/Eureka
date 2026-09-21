@@ -506,6 +506,9 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
 
     var isOpen: Bool { panel != nil }
 
+    /// Fired after local panel state has been torn down on every dismissal path.
+    var onClose: (() -> Void)?
+
     func close() {
         fputs("[Eureka] CapturePanel.close()\n", stderr)
         dotsTimer?.invalidate(); dotsTimer = nil
@@ -518,6 +521,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         isAIMode = false
         if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }
         if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
+        onClose?()
     }
 
     static func truncate(_ s: String, max: Int) -> String {

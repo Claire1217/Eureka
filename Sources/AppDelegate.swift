@@ -95,8 +95,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.prevAppBundleId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
             let appName = NSWorkspace.shared.frontmostApplication?.localizedName ?? "Unknown"
             let browserURL = self.getBrowserURL(appName: appName)
-            if self.capturePanel == nil { self.capturePanel = CapturePanel() }
-            self.capturePanel?.show(selectedText: text, anchorPoint: pos) { [weak self] thought in
+            let panel = self.ensureCapturePanel()
+            panel.show(selectedText: text, anchorPoint: pos) { [weak self] thought in
                 self?.saveThought(thought: thought, selectedText: text,
                                   appName: appName, browserURL: browserURL)
             }
@@ -186,6 +186,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: Capture Flow
 
     @objc func triggerCapture() {
+        // Spotlight-style toggle: pressing the shortcut again dismisses the panel.
+        if dismissOpenPanel() { return }
+
         let prevApp = NSWorkspace.shared.frontmostApplication
         prevAppBundleId = prevApp?.bundleIdentifier
 
@@ -194,8 +197,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let appName = prevApp?.localizedName ?? "Unknown"
         let browserURL = getBrowserURL(appName: appName)
 
-        if capturePanel == nil { capturePanel = CapturePanel() }
-        capturePanel?.show(selectedText: selectedText, anchorPoint: mousePos) { [weak self] thought in
+        let panel = ensureCapturePanel()
+        panel.show(selectedText: selectedText, anchorPoint: mousePos) { [weak self] thought in
             self?.saveThought(thought: thought, selectedText: selectedText,
                               appName: appName, browserURL: browserURL)
         }
@@ -204,6 +207,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: Screenshot Capture Flow (⌥R)
 
     @objc func triggerScreenshot() {
+        // Use the same toggle contract when the comment panel is already open.
+        if dismissOpenPanel() { return }
+
         let prevApp = NSWorkspace.shared.frontmostApplication
         let appName = prevApp?.localizedName ?? "Unknown"
         let browserURL = getBrowserURL(appName: appName)
@@ -236,9 +242,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 guard FileManager.default.fileExists(atPath: tmpPath) else { return }
                 let mousePos = NSEvent.mouseLocation
-                if self?.capturePanel == nil { self?.capturePanel = CapturePanel() }
-                self?.capturePanel?.show(selectedText: "", anchorPoint: mousePos,
-                                        screenshotPath: tmpPath) { thought in
+                let panel = self?.ensureCapturePanel()
+                panel?.show(selectedText: "", anchorPoint: mousePos,
+                            screenshotPath: tmpPath) { thought in
                     self?.saveThought(thought: thought, selectedText: "",
                                       appName: appName, browserURL: browserURL,
                                       screenshotPath: tmpPath)
@@ -425,6 +431,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let saveQueue = DispatchQueue(label: "com.eureka.app.save", qos: .userInitiated)
 
+    // MARK: Panel Lifecycle
+
+    /// Keeps one panel instance and cancels an in-flight AI request on every
+    /// dismissal path: the hotkey toggle, Esc, or a click outside the panel.
+    @discardableResult
+    private func ensureCapturePanel() -> CapturePanel {
+        if let existing = capturePanel { return existing }
+        let panel = CapturePanel()
+        panel.onClose = { [weak self] in self?.cancelStreaming() }
+        capturePanel = panel
+        return panel
+    }
+
+    /// Returns true when the current shortcut press dismissed an open panel.
+    private func dismissOpenPanel() -> Bool {
+        guard let panel = capturePanel, panel.isOpen else { return false }
+        panel.close()
+        return true
+    }
+
     /// Saves are asynchronous — let an in-flight one finish before quitting.
     func applicationWillTerminate(_ notification: Notification) {
         saveQueue.sync {}
@@ -432,6 +458,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var streamSession: URLSession?
     private var streamDelegate: StreamingDelegate?
+
+    private func cancelStreaming() {
+        streamSession?.invalidateAndCancel()
+        streamSession = nil
+        streamDelegate = nil
+    }
 
     func askDeepSeekStreaming(question: String, context: String) {
         let storage = LocalStorage.shared
@@ -472,8 +504,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         req.timeoutInterval = 60
 
         let del = StreamingDelegate(panel: capturePanel, bubble: resultBubble, question: question)
-        // Cancel any in-flight request; the session retains its delegate until invalidated
-        streamSession?.invalidateAndCancel()
+        // Cancel any in-flight request; the session retains its delegate until invalidated.
+        cancelStreaming()
         streamDelegate = del
         let session = URLSession(configuration: .default, delegate: del, delegateQueue: nil)
         streamSession = session
