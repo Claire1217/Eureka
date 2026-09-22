@@ -4,8 +4,6 @@
 
 VERSION_DEFAULT="$(tr -d '[:space:]' < "$(dirname "${BASH_SOURCE[0]}")/VERSION")"
 MIN_MACOS="12.0"
-FRAMEWORKS=(-framework Cocoa -framework Carbon -framework ApplicationServices
-            -framework CoreGraphics -framework WebKit)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -31,6 +29,15 @@ make_icon() {
     cp -f "$ROOT_DIR/Resources/AppIcon.icns" "$dest/AppIcon.icns"
 }
 
+# copy_resources <Resources dir> — bundle non-code resources and third-party notices.
+copy_resources() {
+    local dest="$1"
+    make_icon "$dest"
+    if [ -d "$ROOT_DIR/Resources/Licenses" ]; then
+        /usr/bin/ditto "$ROOT_DIR/Resources/Licenses" "$dest/Licenses"
+    fi
+}
+
 # refresh_icon <App.app> — Finder, Launchpad and the Dock cache icons per app; without this an
 # updated app can keep showing the generic placeholder.
 refresh_icon() {
@@ -43,7 +50,7 @@ refresh_icon() {
 write_plist() {
     local app="$1" version="$2"
     mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-    make_icon "$app/Contents/Resources"
+    copy_resources "$app/Contents/Resources"
     cat > "$app/Contents/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
