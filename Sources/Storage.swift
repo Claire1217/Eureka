@@ -8,7 +8,10 @@ class LocalStorage {
 
     var vaultPath: String {
         get { UserDefaults.standard.string(forKey: "vaultPath") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "vaultPath") }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "vaultPath")
+            TagHistory.shared.refreshFromObsidian(at: newValue)
+        }
     }
 
     var backend: String {

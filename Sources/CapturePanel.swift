@@ -17,6 +17,10 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
     private var quoteLabel: NSTextField?
     private var ctxBoxView: NSView?
     private var onSubmit: ((String) -> Void)?
+    private var tagSuggestionView: TagSuggestionView?
+    private var tagSuggestionPanel: NSPanel?
+    private var activeTagRange: NSRange?
+    private var tagHistoryObserver: NSObjectProtocol?
 
     private var escMonitor: Any?
     private var clickMonitor: Any?
@@ -145,6 +149,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         tv.textContainer?.containerSize = NSSize(width: pw - 32, height: CGFloat.greatestFiniteMagnitude)
         tv.isVerticallyResizable = true
         tv.isHorizontallyResizable = false
+        tv.isAutomaticTextCompletionEnabled = false
         tv.textStorage?.delegate = self
         sv.documentView = tv
         c.addSubview(sv)
@@ -178,6 +183,9 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         NSApp.activate(ignoringOtherApps: true)
         p.makeFirstResponder(tv)
         panel = p
+        tagHistoryObserver = NotificationCenter.default.addObserver(
+            forName: TagHistory.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in self?.updateTagSuggestions() }
 
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.15
@@ -188,10 +196,26 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
 
         // Keyboard: Esc to close, Enter to submit
         escMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] ev in
-            if ev.keyCode == 53 { self?.close(); return nil }
+            guard let self else { return ev }
+            if self.tagSuggestionView != nil {
+                switch ev.keyCode {
+                case 53: self.hideTagSuggestions(); return nil       // Esc
+                case 125: self.tagSuggestionView?.moveSelection(by: 1); return nil  // ↓
+                case 126: self.tagSuggestionView?.moveSelection(by: -1); return nil // ↑
+                case 36: // Enter completes; Shift+Enter keeps its newline behavior.
+                    if ev.modifierFlags.contains(.shift) { return ev }
+                    if let tv = self.textView, tv.hasMarkedText() { return ev }
+                    self.tagSuggestionView?.selectCurrent(); return nil
+                case 48: // Tab completes the selected tag.
+                    if let tv = self.textView, tv.hasMarkedText() { return ev }
+                    self.tagSuggestionView?.selectCurrent(); return nil
+                default: break
+                }
+            }
+            if ev.keyCode == 53 { self.close(); return nil }
             if ev.keyCode == 36 && !ev.modifierFlags.contains(.shift) {
-                if let tv = self?.textView, tv.hasMarkedText() { return ev }
-                self?.submit(); return nil
+                if let tv = self.textView, tv.hasMarkedText() { return ev }
+                self.submit(); return nil
             }
             return ev
         }
@@ -213,6 +237,7 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         guard !updatingStyle else { return }
         DispatchQueue.main.async { [weak self] in
             self?.resizeToFit()
+            self?.updateTagSuggestions()
         }
     }
 
@@ -296,6 +321,97 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         if let h = hintLabel {
             h.frame = NSMakeRect(pw - 100, inputY + 4, 90, 12)
         }
+    }
+
+    // MARK: Hashtag search and completion
+
+    private func updateTagSuggestions() {
+        guard !answerPhase, let tv = textView, panel != nil, !tv.hasMarkedText() else {
+            hideTagSuggestions(); return
+        }
+        guard let match = activeHashtag(in: tv) else {
+            hideTagSuggestions(); return
+        }
+
+        let tags = TagHistory.shared.suggestions(matching: match.query)
+        guard !tags.isEmpty else { hideTagSuggestions(); return }
+        activeTagRange = match.range
+
+        let suggestion: TagSuggestionView
+        if let existing = tagSuggestionView {
+            suggestion = existing
+        } else {
+            suggestion = TagSuggestionView(frame: .zero)
+            suggestion.onSelect = { [weak self] tag in self?.completeTag(tag) }
+            let popup = NSPanel(
+                contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered, defer: false)
+            popup.level = .floating
+            popup.isOpaque = false
+            popup.backgroundColor = .clear
+            popup.hasShadow = false
+            popup.contentView = suggestion
+            panel?.addChildWindow(popup, ordered: .above)
+            popup.orderFront(nil)
+            tagSuggestionPanel = popup
+            tagSuggestionView = suggestion
+        }
+        suggestion.update(tags: tags)
+        positionTagSuggestions(suggestion)
+    }
+
+    private func activeHashtag(in tv: NSTextView) -> (range: NSRange, query: String)? {
+        let selection = tv.selectedRange()
+        guard selection.length == 0 else { return nil }
+        let ns = tv.string as NSString
+        guard selection.location <= ns.length else { return nil }
+        let prefix = ns.substring(to: selection.location) as NSString
+        guard let regex = try? NSRegularExpression(
+            pattern: #"(?:^|[\s\(\[\{])#([\p{L}\p{N}_/-]*)$"#
+        ), let match = regex.firstMatch(
+            in: prefix as String, range: NSRange(location: 0, length: prefix.length)
+        ) else { return nil }
+        let queryRange = match.range(at: 1)
+        let hashRange = NSRange(location: queryRange.location - 1, length: queryRange.length + 1)
+        return (hashRange, prefix.substring(with: queryRange))
+    }
+
+    private func positionTagSuggestions(_ suggestion: TagSuggestionView) {
+        guard let tv = textView, let p = panel else { return }
+        let caret = tv.firstRect(forCharacterRange: tv.selectedRange(), actualRange: nil)
+        let width: CGFloat = 210
+        let height = suggestion.preferredHeight
+        let screen = NSScreen.screens.first { NSMouseInRect(caret.origin, $0.frame, false) }
+            ?? p.screen ?? NSScreen.main
+        let visible = screen?.visibleFrame ?? .zero
+        var x = max(visible.minX + 8, min(caret.minX, visible.maxX - width - 8))
+        var y = caret.minY - height - 6
+        if y < visible.minY + 8 { y = caret.maxY + 6 }
+        x = min(x, visible.maxX - width - 8)
+        let frame = NSRect(x: x, y: y, width: width, height: height)
+        tagSuggestionPanel?.setFrame(frame, display: true)
+        suggestion.frame = NSRect(origin: .zero, size: frame.size)
+    }
+
+    private func completeTag(_ tag: String) {
+        guard let tv = textView, let range = activeTagRange else { return }
+        let ns = tv.string as NSString
+        let needsSpace = NSMaxRange(range) >= ns.length
+            || !(ns.substring(with: NSRange(location: NSMaxRange(range), length: 1))
+                .first?.isWhitespace ?? false)
+        let replacement = "#\(tag)" + (needsSpace ? " " : "")
+        tv.insertText(replacement, replacementRange: range)
+        hideTagSuggestions()
+    }
+
+    private func hideTagSuggestions() {
+        if let popup = tagSuggestionPanel {
+            panel?.removeChildWindow(popup)
+            popup.orderOut(nil)
+        }
+        tagSuggestionPanel = nil
+        tagSuggestionView = nil
+        activeTagRange = nil
     }
 
     private func submit() {
@@ -512,6 +628,11 @@ class CapturePanel: NSObject, NSTextStorageDelegate {
         streamTimer?.invalidate(); streamTimer = nil
         answerPhase = false; answerBuffer = ""
         questionLabel?.removeFromSuperview(); questionLabel = nil
+        hideTagSuggestions()
+        if let observer = tagHistoryObserver {
+            NotificationCenter.default.removeObserver(observer)
+            tagHistoryObserver = nil
+        }
         panel?.close(); panel = nil
         screenshotView = nil
         ctxBoxView = nil
