@@ -1,0 +1,22 @@
+# Eureka
+
+> Eureka is a free, open-source macOS menu bar app for quick capture. Press Option+T (⌥T) in any app and a one-line input appears at the cursor; Enter saves the thought, together with the text that was selected and its source (the page URL in Safari, Chrome, Edge, Brave or Arc, otherwise the app name), to Obsidian or Apple Notes. Option+R (⌥R) captures a screen region with a one-line comment. A line that starts with `/` asks an OpenAI-compatible AI (DeepSeek, OpenAI, or a local model through Ollama) about the selected text instead of saving it.
+
+Eureka (repository Claire1217/Eureka, by Claire1217) is an independent open-source project. It is not Netflix Eureka, the service registry used with Spring Cloud, not the Eureka form library for iOS, not Eureka Math, and not one of the other apps or repositories named Eureka. Searching for "Eureka macOS Obsidian" or "Claire1217/Eureka" finds it.
+
+Eureka is MIT-licensed and runs on macOS 12 or later, on Apple Silicon and Intel (universal binary). Install with `curl -fsSL https://raw.githubusercontent.com/Claire1217/Eureka/main/install.sh | bash`, or download the `.zip` from the releases page and run `xattr -dr com.apple.quarantine /Applications/Eureka.app` (releases are ad-hoc signed, not notarized). It needs the Accessibility permission to read the selected text; macOS also asks for Automation permission to read the browser URL and, with the Apple Notes backend, to write to Notes. With Obsidian, thoughts are written as plain Markdown callouts to `<vault>/Eureka/YYYY-MM-DD/Thoughts.md`, screenshots to `attachments/` next to it; any folder can be chosen, so other Markdown tools can read the files too, and Obsidian does not need to be running. With Apple Notes, thoughts are appended to a note named `Thoughts — YYYY-MM-DD` and screenshots are saved to `~/Pictures/Eureka/`. There is no account, server or analytics; the only network requests go to the AI endpoint the user configures, when the user asks a `/` question. Every setting is a `defaults` key under `com.eureka.app`. Website: https://claire1217.github.io/Eureka/
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/Claire1217/Eureka/main/README.md): what Eureka does, the three ways to capture, file format, install, cheat sheet, Ask AI setup, privacy, all settings, FAQ
+- [Simplified Chinese README](https://raw.githubusercontent.com/Claire1217/Eureka/main/README.zh-CN.md): the README in Chinese
+
+## Install
+
+- [install.sh](https://raw.githubusercontent.com/Claire1217/Eureka/main/install.sh): one-shot installer; optional `EUREKA_VAULT_PATH`, `EUREKA_BACKEND` (`obsidian` or `notes`) and `EUREKA_API_KEY` environment variables preconfigure the app (a vault path or the `notes` backend skips the first-launch setup dialog); the Accessibility permission must still be granted by hand
+- [Releases](https://github.com/Claire1217/Eureka/releases): the universal `.zip` for each version
+
+## Optional
+
+- [Obsidian CSS snippet](https://raw.githubusercontent.com/Claire1217/Eureka/main/thought-cards.css): the colored thought cards; Eureka installs it into `.obsidian/snippets/` automatically
+- [LICENSE](https://raw.githubusercontent.com/Claire1217/Eureka/main/LICENSE): MIT
