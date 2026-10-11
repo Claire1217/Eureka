@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eureka — quick capture for Mac: save thoughts to Obsidian or Apple Notes</title>
+<meta name="description" content="Free, open-source macOS menu bar app: press ⌥T in any app to save a thought, with the selected text and its source URL, to Obsidian or Apple Notes.">
+<link rel="canonical" href="https://claire1217.github.io/Eureka/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f6fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14131c" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="alternate" type="text/plain" title="llms.txt" href="llms.txt">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eureka">
+<meta property="og:title" content="Eureka — quick capture for Mac: save thoughts to Obsidian or Apple Notes">
+<meta property="og:description" content="A free, open-source macOS menu bar app. Press ⌥T in any app, type one line, and the thought lands in Obsidian or Apple Notes with the text you selected and where it came from.">
+<meta property="og:url" content="https://claire1217.github.io/Eureka/">
+<meta property="og:image" content="https://claire1217.github.io/Eureka/assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Eureka logo: a cursor with a blue dot and spark lines, next to the word Eureka">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Eureka — quick capture for Mac: save thoughts to Obsidian or Apple Notes">
+<meta name="twitter:description" content="A free, open-source macOS menu bar app. Press ⌥T in any app, type one line, and the thought lands in Obsidian or Apple Notes with the text you selected and where it came from.">
+<meta name="twitter:image" content="https://claire1217.github.io/Eureka/assets/social-preview.png">
+
+<!-- softwareVersion is rewritten from VERSION by .github/workflows/pages.yml on deploy.
+     The FAQPage entries mirror the visible FAQ below and the FAQ in README.md; keep all three in sync. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://claire1217.github.io/Eureka/#app",
+      "name": "Eureka",
+      "description": "Eureka is a free, open-source macOS menu bar app for quick capture: press Option+T in any app to save a one-line thought, with the text you selected and its source URL or app, to Obsidian or Apple Notes. Option+R captures a screenshot region with a comment, and a line starting with / asks an OpenAI-compatible AI about the selected text.",
+      "url": "https://claire1217.github.io/Eureka/",
+      "operatingSystem": "macOS 12 or later",
+      "applicationCategory": "UtilitiesApplication",
+      "applicationSubCategory": "Note-taking, quick capture",
+      "softwareVersion": "2.1.0",
+      "softwareRequirements": "macOS 12 or later, Apple Silicon or Intel; Accessibility permission",
+      "downloadUrl": "https://github.com/Claire1217/Eureka/releases",
+      "installUrl": "https://raw.githubusercontent.com/Claire1217/Eureka/main/install.sh",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "image": "https://claire1217.github.io/Eureka/assets/social-preview.png",
+      "screenshot": "https://claire1217.github.io/Eureka/assets/obsidian-demo.png",
+      "featureList": [
+        "Option+T: save a one-line thought with the selected text and its source URL or app",
+        "Option+R: screenshot a region and save it with a one-line comment",
+        "/ question: ask an OpenAI-compatible AI (DeepSeek, OpenAI, Ollama) about the selection",
+        "Capture dot: click a small dot next to a mouse selection to capture it",
+        "Recent captures: a floating bubble with the last 20 thoughts",
+        "Saves plain Markdown to an Obsidian vault or a daily note in Apple Notes"
+      ],
+      "author": { "@type": "Person", "name": "Claire1217", "url": "https://github.com/Claire1217" },
+      "sameAs": ["https://github.com/Claire1217/Eureka"]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://github.com/Claire1217/Eureka",
+      "name": "Eureka",
+      "codeRepository": "https://github.com/Claire1217/Eureka",
+      "programmingLanguage": "Swift",
+      "license": "https://opensource.org/licenses/MIT",
+      "author": { "@type": "Person", "name": "Claire1217", "url": "https://github.com/Claire1217" },
+      "targetProduct": { "@id": "https://claire1217.github.io/Eureka/#app" }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://claire1217.github.io/Eureka/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Eureka free and open source?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Eureka is MIT-licensed, with no account, no paid tier and no server of its own. The only possible cost is the AI provider you choose for / questions, billed by that provider; a local model through Ollama costs nothing, and capturing thoughts never needs AI at all." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Eureka work with Obsidian? Does Obsidian need to be open?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes, Obsidian is the default. Eureka writes plain Markdown straight into your vault: one file per day, by default Eureka/YYYY-MM-DD/Thoughts.md, with screenshots in attachments/ next to it. It writes the file itself, so Obsidian does not need to be running. Each thought is an Obsidian callout, and a small CSS snippet turns it into a colored card. Clicking a thought in the recent-captures bubble opens it in Obsidian." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can Eureka save to Apple Notes instead?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Choose Apple Notes on first launch or in Settings. Thoughts are appended to one note per day, Thoughts — YYYY-MM-DD, and macOS asks for permission to let Eureka control Notes. Screenshots are kept in ~/Pictures/Eureka/ and the note gets the file path, because Notes drops earlier images when a note is changed through automation." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Eureka work with Logseq or another Markdown app?",
+          "acceptedAnswer": { "@type": "Answer", "text": "In Settings you can point Eureka at any folder, not only an Obsidian vault, and it writes the same plain Markdown files there, so any app that reads a folder of .md files can open them. Two things are Obsidian-only: the colored cards (elsewhere a thought shows as a quote whose first line is [!thought-coral] 11:03) and jumping to a thought from the recent-captures bubble. There is no integration with Notion, Bear or other apps that keep notes in a database." }
+        },
+        {
+          "@type": "Question",
+          "name": "Which apps does Eureka capture the selection and source URL from?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The selected text comes from any app that exposes it through macOS Accessibility; when an app does not (some Electron apps), Eureka sends a Command+C and restores your clipboard right after. The page URL is read from Safari, Chrome, Edge, Brave and Arc. In every other app, including Firefox, the source is the app name." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Eureka send my notes anywhere?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Thoughts and screenshots are written only to your vault folder or to Apple Notes. Eureka has no analytics and makes no network requests of its own. The only requests go to the AI endpoint you configure, and only when you use it: a / question sends the question and the selected text." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can Eureka use a local model, like Ollama?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Set the API base URL to http://localhost:11434/v1, pick a model such as llama3.2, and leave the API key empty; nothing leaves your Mac. Any OpenAI-compatible API works the same way, including DeepSeek and OpenAI." }
+        },
+        {
+          "@type": "Question",
+          "name": "Which Macs does Eureka run on?",
+          "acceptedAnswer": { "@type": "Answer", "text": "macOS 12 Monterey or later, on Apple Silicon and Intel: the release is a universal binary. It needs the Accessibility permission to read your selection. Releases are not notarized yet, so remove the quarantine flag after downloading (the install script does this for you)." }
+        },
+        {
+          "@type": "Question",
+          "name": "How is Eureka different from Apple Quick Note, Raycast or Drafts?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Those open a notes window, and the note lives in their app. Eureka opens a one-line input at your cursor, attaches the text you selected and where it came from without being asked, and writes into your Obsidian vault or Apple Notes, then gets out of the way. It does one thing; if you want a full writing app or a launcher, those tools do much more." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this the same as Netflix Eureka, or the other projects named Eureka?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. This Eureka (repository Claire1217/Eureka) is a macOS menu bar app for capturing thoughts into Obsidian or Apple Notes. It is unrelated to Netflix Eureka, the service registry used with Spring Cloud, to the Eureka form library for iOS, to the Eureka Math curriculum, and to other apps and repositories with the same name. To find this one, search for Claire1217/Eureka or Eureka macOS Obsidian." }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+:root {
+  --bg: #f7f6fb;
+  --surface: #ffffff;
+  --text: #26233f;
+  --muted: #5d5a73;
+  --border: #e2e0ec;
+  --accent: #3f63e0;
+  --accent-text: #ffffff;
+  --code-bg: #efeef5;
+  --kbd-bg: #ffffff;
+  --glow-1: rgba(245, 166, 115, 0.22);
+  --glow-2: rgba(140, 199, 242, 0.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14131c;
+    --surface: #1d1c28;
+    --text: #ecebf3;
+    --muted: #a6a3b8;
+    --border: #2f2d3d;
+    --accent: #7c9dff;
+    --accent-text: #14131c;
+    --code-bg: #23222f;
+    --kbd-bg: #2a2937;
+    --glow-1: rgba(245, 166, 115, 0.08);
+    --glow-2: rgba(97, 128, 217, 0.16);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(60rem 30rem at 0% 0%, var(--glow-1), transparent 70%),
+    radial-gradient(60rem 30rem at 100% 0%, var(--glow-2), transparent 70%),
+    var(--bg);
+  background-repeat: no-repeat;
+  color: var(--text);
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+header.top a.brand { display: inline-flex; }
+header.top img { height: 34px; width: auto; display: block; }
+nav.links { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 15px; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+nav.links a { color: var(--muted); text-decoration: none; }
+nav.links a:hover { color: var(--text); }
+
+.hero { text-align: center; padding: 40px 0 8px; }
+.eyebrow { margin: 0 0 10px; color: var(--muted); font-size: 15px; letter-spacing: 0.01em; }
+h1 { margin: 0; font-size: clamp(30px, 6vw, 48px); line-height: 1.15; letter-spacing: -0.02em; }
+.lede { max-width: 720px; margin: 18px auto 0; font-size: 19px; color: var(--muted); }
+.lede strong { color: var(--text); font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 28px 0 0; }
+.btn { display: inline-block; padding: 10px 18px; border-radius: 10px; font-weight: 600; text-decoration: none; border: 1px solid var(--border); color: var(--text); background: var(--surface); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.meta { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+
+.install { max-width: 720px; margin: 28px auto 0; text-align: left; }
+.cmd { position: relative; }
+pre { margin: 0; padding: 14px 16px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.cmd pre { padding-right: 76px; }
+.copy { position: absolute; top: 8px; right: 8px; padding: 5px 10px; font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 5px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+kbd { display: inline-block; white-space: nowrap; min-width: 1.6em; padding: 0.05em 0.4em; font-family: inherit; font-size: 0.85em; font-weight: 600; line-height: 1.4; text-align: center; color: var(--text); background: var(--kbd-bg); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px; }
+
+figure { margin: 0; }
+img { max-width: 100%; height: auto; }
+.shot { display: block; width: 100%; border-radius: 18px; }
+.hero-shot { margin: 40px 0 0; }
+
+section { padding: 48px 0 0; }
+h2 { font-size: clamp(24px, 4vw, 30px); line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 14px; }
+h3 { font-size: 19px; line-height: 1.3; margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+.why { max-width: 720px; font-size: 18px; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 14px 18px; }
+.card .shot { border-radius: 12px; margin: 0 0 14px; }
+.card p { color: var(--muted); font-size: 16px; }
+.card h3, .card p { padding: 0 4px; }
+ul.plain { padding-left: 1.2em; margin: 0; }
+ul.plain li { margin: 0 0 6px; }
+
+.notes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.notes img { border-radius: 14px; border: 1px solid var(--border); }
+
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; margin: 0 0 10px; }
+summary { cursor: pointer; padding: 14px 0; font-weight: 600; }
+details[open] summary { padding-bottom: 6px; }
+details > div { padding: 0 0 14px; color: var(--muted); }
+details > div p:last-child { margin: 0; }
+
+.zh { border-top: 1px solid var(--border); margin-top: 56px; }
+footer { margin: 56px 0 0; padding: 22px 0 40px; border-top: 1px solid var(--border); font-size: 14px; color: var(--muted); }
+footer p { margin: 0 0 6px; }
+
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  header.top { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .hero { padding-top: 20px; }
+  .lede { font-size: 17px; }
+  .grid, .notes { grid-template-columns: minmax(0, 1fr); }
+  section { padding-top: 40px; }
+  .cmd pre { padding-right: 16px; }
+  .copy { position: static; margin-top: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <a class="brand" href="./" aria-label="Eureka home">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-dark.png">
+      <img src="assets/wordmark.png" alt="Eureka" width="94" height="34">
+    </picture>
+  </a>
+  <nav class="links" aria-label="Page">
+    <a href="#capture">Features</a>
+    <a href="#install">Install</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#faq">FAQ</a>
+    <a href="#zh" hreflang="zh-CN" lang="zh-CN">简体中文</a>
+    <a href="https://github.com/Claire1217/Eureka">GitHub</a>
+  </nav>
+</header>
+
+<main>
+<div class="hero">
+  <p class="eyebrow">Eureka · quick capture for macOS · Obsidian and Apple Notes</p>
+  <h1>Press a hotkey. Type a thought. Done.</h1>
+  <p class="lede"><strong>Eureka is a free, open-source macOS menu bar app for quick capture: press <kbd>⌥T</kbd> in any app to save a one-line thought, with the text you selected and its source (page URL or app), to Obsidian or Apple Notes.</strong> <kbd>⌥R</kbd> does the same with a screenshot.</p>
+
+  <div class="actions">
+    <a class="btn primary" href="https://github.com/Claire1217/Eureka/releases/latest">Download for Mac</a>
+    <a class="btn" href="https://github.com/Claire1217/Eureka">Source on GitHub</a>
+  </div>
+  <p class="meta">Version <span class="ver">2.1.0</span> · macOS 12 or later · Apple Silicon and Intel · MIT license</p>
+
+  <figure class="hero-shot">
+    <img class="shot" src="assets/hero.svg" width="1200" height="700" alt="Eureka demo: a sentence is selected in a web page, Option+T is pressed, one line is typed and Enter saves it as a colored card in Obsidian with the page as its source; then the same happens in a code editor and a second card lands in the same note">
+  </figure>
+</div>
+
+<section>
+  <p class="why">Ideas show up while you are reading, coding or in a meeting — not while your notes app is open. Switching apps to write one line costs more focus than the line is worth, so most of those thoughts are lost. Eureka makes the cost one hotkey and one line, and it remembers <em>where</em> the thought came from, so the note still makes sense next week.</p>
+</section>
+
+<section id="capture">
+  <h2>Three ways to capture</h2>
+  <h3><kbd>⌥</kbd> <kbd>T</kbd> &nbsp;A thought, with its context</h3>
+  <p>Press the hotkey in any app and a small input appears at your cursor. Whatever you had selected is quoted under your thought, with the page URL (Safari, Chrome, Edge, Brave, Arc) or the app name as the source. Select nothing and it is just a quick note. <strong>Enter</strong> saves, <strong>Esc</strong> cancels — you never leave what you were doing.</p>
+
+  <div class="grid" style="margin-top: 22px">
+    <article class="card">
+      <img class="shot" src="assets/feature-screenshot.svg" width="600" height="420" loading="lazy" alt="Screenshot capture: press Option+R, drag a region, type one line, press Enter — image and comment are saved as one card">
+      <h3><kbd>⌥</kbd> <kbd>R</kbd> &nbsp;A screenshot, with one line</h3>
+      <p>Drag a region, say why it matters, press Enter. The image and your comment land in the same card, so the chart you grabbed in a meeting still has its <em>“this spike = the 9am push”</em> next to it a month later. Enter on an empty line saves just the image.</p>
+    </article>
+    <article class="card">
+      <img class="shot" src="assets/feature-ask.svg" width="600" height="420" loading="lazy" alt="AI quick answer: select text, press Option+T, type a slash and a question — the answer appears in the panel">
+      <h3><kbd>/</kbd> &nbsp;Ask AI about what you selected</h3>
+      <p>Start the line with <code>/</code> and it becomes a question instead of a note. The selected text is sent along as context and a short answer appears in the panel. Bring your own key: DeepSeek, OpenAI, or a local model through Ollama.</p>
+    </article>
+    <article class="card">
+      <img class="shot" src="assets/feature-dot.svg" width="600" height="420" loading="lazy" alt="Capture dot: text is selected with the mouse, a small blue dot appears next to the pointer, a click on it opens the capture panel with the selection attached, one line is typed and Enter saves the card">
+      <h3>Or skip the hotkey: click the dot</h3>
+      <p>Select text with the mouse and a small blue dot appears next to the pointer. Click it and the same panel opens with your selection attached. Ignore it and it fades away. It can be turned off in Settings.</p>
+    </article>
+    <article class="card">
+      <h3>Also in the box</h3>
+      <ul class="plain">
+        <li><strong>Recent captures</strong> — a floating bubble keeps your last 20 thoughts; click one to jump to it.</li>
+        <li><strong>Obsidian or Apple Notes</strong> — plain Markdown in your vault, or a daily note in Notes.</li>
+        <li><strong>Yours to rebind</strong> — both hotkeys are configurable, and every setting is a <code>defaults</code> key.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section id="notes">
+  <h2>What lands in your notes</h2>
+  <div class="notes">
+    <img src="assets/obsidian-demo.png" width="1420" height="1330" loading="lazy" alt="A day of thoughts captured with Eureka, shown as colored cards in Obsidian">
+    <div>
+      <p>One file per day, one Obsidian callout per thought, plain Markdown that stays readable in any editor:</p>
+<pre><code>your-vault/Eureka/
+  2026-06-29/
+    Thoughts.md       # every thought of the day
+    attachments/      # screenshots</code></pre>
+      <p style="margin-top: 12px">The colored cards come from a small CSS snippet that Eureka installs into <code>.obsidian/snippets/</code> when you pick your vault. With Apple Notes, thoughts are appended to a note called <code>Thoughts — YYYY-MM-DD</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>Install</h2>
+  <p>Requires macOS 12 or later (Apple Silicon and Intel). Paste this into Terminal:</p>
+  <div class="cmd">
+    <pre><code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/Claire1217/Eureka/main/install.sh | bash</code></pre>
+    <button class="copy" type="button" data-copy="install-cmd" hidden>Copy</button>
+  </div>
+  <p style="margin-top: 14px">Or download the <code>.zip</code> from <a href="https://github.com/Claire1217/Eureka/releases">Releases</a>, unzip it into <code>/Applications</code> and run <code>xattr -dr com.apple.quarantine /Applications/Eureka.app</code> (the app is not notarized yet).</p>
+  <p>On first launch, enable Eureka under <strong>System Settings → Privacy &amp; Security → Accessibility</strong> so it can read the text you select, then pick your Obsidian vault or Apple Notes. Press <kbd>⌥</kbd> <kbd>T</kbd> and you are done; everything else is under the <strong>E!</strong> menu bar icon.</p>
+</section>
+
+<section id="privacy">
+  <h2>Privacy</h2>
+  <p>Everything is written locally — to your vault folder or to Apple Notes. Eureka has no server, no account and no analytics. Network requests go only to the AI endpoint you configure, when you ask a <code>/</code> question. Whatever was already on your clipboard is never saved: when an app does not expose its selection, Eureka sends a ⌘C to read it and puts your previous clipboard back right after.</p>
+</section>
+
+<section id="faq">
+  <h2>FAQ</h2>
+  <details open>
+    <summary>Is Eureka free and open source?</summary>
+    <div><p>Yes. Eureka is MIT-licensed, with no account, no paid tier and no server of its own. The only possible cost is the AI provider you choose for <kbd>/</kbd> questions, billed by that provider; a local model through Ollama costs nothing, and capturing thoughts never needs AI at all.</p></div>
+  </details>
+  <details>
+    <summary>Does it work with Obsidian? Does Obsidian need to be open?</summary>
+    <div><p>Yes, Obsidian is the default. Eureka writes plain Markdown straight into your vault: one file per day, by default <code>Eureka/YYYY-MM-DD/Thoughts.md</code>, with screenshots in <code>attachments/</code> next to it. It writes the file itself, so Obsidian does not need to be running. Each thought is an Obsidian callout, and a small CSS snippet turns it into a colored card. Clicking a thought in the recent-captures bubble opens it in Obsidian.</p></div>
+  </details>
+  <details>
+    <summary>Can I save to Apple Notes instead?</summary>
+    <div><p>Yes. Choose Apple Notes on first launch or in Settings. Thoughts are appended to one note per day, <code>Thoughts — YYYY-MM-DD</code>, and macOS asks for permission to let Eureka control Notes. Screenshots are kept in <code>~/Pictures/Eureka/</code> and the note gets the file path, because Notes drops earlier images when a note is changed through automation.</p></div>
+  </details>
+  <details>
+    <summary>What about Logseq, or another Markdown app?</summary>
+    <div><p>In Settings you can point Eureka at any folder, not only an Obsidian vault, and it writes the same plain Markdown files there, so any app that reads a folder of <code>.md</code> files can open them. Two things are Obsidian-only: the colored cards (elsewhere a thought shows as a quote whose first line is <code>[!thought-coral] 11:03</code>) and jumping to a thought from the recent-captures bubble. There is no integration with Notion, Bear or other apps that keep notes in a database.</p></div>
+  </details>
+  <details>
+    <summary>Which apps does it capture the selection and source URL from?</summary>
+    <div><p>The selected text comes from any app that exposes it through macOS Accessibility; when an app does not (some Electron apps), Eureka sends a ⌘C and restores your clipboard right after. The page URL is read from Safari, Chrome, Edge, Brave and Arc. In every other app, including Firefox, the source is the app name.</p></div>
+  </details>
+  <details>
+    <summary>Does it send my notes anywhere?</summary>
+    <div><p>No. Thoughts and screenshots are written only to your vault folder or to Apple Notes. Eureka has no analytics and makes no network requests of its own. The only requests go to the AI endpoint you configure, and only when you use it: a <kbd>/</kbd> question sends the question and the selected text.</p></div>
+  </details>
+  <details>
+    <summary>Can I use a local model, like Ollama?</summary>
+    <div><p>Yes. Set the API base URL to <code>http://localhost:11434/v1</code>, pick a model such as <code>llama3.2</code>, and leave the API key empty; nothing leaves your Mac. Any OpenAI-compatible API works the same way, including DeepSeek and OpenAI (<a href="https://github.com/Claire1217/Eureka#ask-ai-setup">setup</a>).</p></div>
+  </details>
+  <details>
+    <summary>Which Macs does it run on?</summary>
+    <div><p>macOS 12 Monterey or later, on Apple Silicon and Intel: the release is a universal binary. It needs the Accessibility permission to read your selection. Releases are not notarized yet, so remove the quarantine flag after downloading (the install script does this for you).</p></div>
+  </details>
+  <details>
+    <summary>How is it different from Apple Quick Note, Raycast or Drafts?</summary>
+    <div><p>Those open a notes window, and the note lives in their app. Eureka opens a one-line input at your cursor, attaches the text you selected and where it came from without being asked, and writes into your Obsidian vault or Apple Notes, then gets out of the way. It does one thing; if you want a full writing app or a launcher, those tools do much more.</p></div>
+  </details>
+  <details>
+    <summary>Is this the same as Netflix Eureka, or the other projects named Eureka?</summary>
+    <div><p>No. This Eureka (repository <code>Claire1217/Eureka</code>) is a macOS menu bar app for capturing thoughts into Obsidian or Apple Notes. It is unrelated to Netflix Eureka, the service registry used with Spring Cloud, to the Eureka form library for iOS, to the Eureka Math curriculum, and to other apps and repositories with the same name. To find this one, search for <code>Claire1217/Eureka</code> or <code>Eureka macOS Obsidian</code>.</p></div>
+  </details>
+</section>
+
+<section id="zh" class="zh" lang="zh-CN">
+  <h2>简体中文</h2>
+  <p><strong>Eureka 是一个免费、开源的 macOS 菜单栏快速记录工具：在任意应用里按 <kbd>⌥T</kbd>，就能把一句想法连同选中的文字和它的来源（网页地址或应用名）存进 Obsidian 或 Apple 备忘录。</strong><kbd>⌥R</kbd> 用同样的方式保存一张截图，以 <code>/</code> 开头则是就着选中的内容问 AI（DeepSeek、OpenAI，或通过 Ollama 跑本地模型）。</p>
+  <p>所有内容只写在本地，没有服务器、没有账号、没有统计。需要 macOS 12 或更高版本，Apple Silicon 和 Intel 均可，在终端里运行上面的安装命令即可。完整说明、截图和常见问题见 <a href="https://github.com/Claire1217/Eureka/blob/main/README.zh-CN.md">中文 README</a>。</p>
+</section>
+</main>
+
+<footer>
+  <p>Eureka is made by <a href="https://github.com/Claire1217">Claire1217</a> and released under the <a href="https://github.com/Claire1217/Eureka/blob/main/LICENSE">MIT license</a>.</p>
+  <p><a href="https://github.com/Claire1217/Eureka">GitHub</a> · <a href="https://github.com/Claire1217/Eureka/releases">Releases</a> · <a href="https://github.com/Claire1217/Eureka#readme">README</a> · <a href="https://github.com/Claire1217/Eureka/blob/main/README.zh-CN.md" hreflang="zh-CN">中文 README</a> · <a href="https://github.com/Claire1217/Eureka/issues">Issues</a> · <a href="llms.txt">llms.txt</a></p>
+</footer>
+</div>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+  if (!navigator.clipboard) return;
+  btn.hidden = false;
+  btn.addEventListener('click', function () {
+    var text = document.getElementById(btn.dataset.copy).textContent;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    });
+  });
+});
+</script>
+</body>
+</html>

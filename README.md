@@ -9,8 +9,9 @@
 
 **Press a hotkey. Type a thought. Done.**
 
-A tiny macOS menu bar app that saves a thought — together with the text you selected,<br>
-the page you were on, or a screenshot — straight into Obsidian or Apple Notes.
+Eureka is a free, open-source macOS menu bar app for quick capture: press ⌥T in any app<br>
+to save a one-line thought, with the text you selected and its source (page URL or app),<br>
+to Obsidian or Apple Notes. ⌥R does the same with a screenshot.
 
 [![Release](https://img.shields.io/github/v/release/Claire1217/Eureka)](https://github.com/Claire1217/Eureka/releases)
 [![Build](https://github.com/Claire1217/Eureka/actions/workflows/build.yml/badge.svg)](https://github.com/Claire1217/Eureka/actions/workflows/build.yml)
@@ -18,7 +19,7 @@ the page you were on, or a screenshot — straight into Obsidian or Apple Notes.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Claire1217/Eureka?style=flat)](https://github.com/Claire1217/Eureka/stargazers)
 
-[**Download**](https://github.com/Claire1217/Eureka/releases) · [Install](#install) · [Ask AI setup](#ask-ai-setup) · [简体中文](README.zh-CN.md)
+[**Download**](https://github.com/Claire1217/Eureka/releases) · [Install](#install) · [Ask AI setup](#ask-ai-setup) · [FAQ](#faq) · [简体中文](README.zh-CN.md)
 
 </div>
 
@@ -246,6 +247,100 @@ One step cannot be automated: System Settings → Privacy & Security → Accessi
 - Some Electron apps do not expose their selection, so Eureka falls back to ⌘C there. In editors that copy the whole line when nothing is selected (VS Code), that line can show up as context.
 - Source URLs are only captured from the browsers listed above (Firefox has no scripting interface).
 - The UI is light-mode only for now.
+
+## FAQ
+
+<!-- The same questions and answers are in site/index.html (visible FAQ and FAQPage JSON-LD). Keep them in sync. -->
+
+<details open>
+<summary><b>Is Eureka free and open source?</b></summary>
+
+Yes. Eureka is MIT-licensed, with no account, no paid tier and no server of its own. The only
+possible cost is the AI provider you choose for <kbd>/</kbd> questions, billed by that provider;
+a local model through Ollama costs nothing, and capturing thoughts never needs AI at all.
+</details>
+
+<details>
+<summary><b>Does it work with Obsidian? Does Obsidian need to be open?</b></summary>
+
+Yes, Obsidian is the default. Eureka writes plain Markdown straight into your vault: one file per
+day, by default `Eureka/YYYY-MM-DD/Thoughts.md`, with screenshots in `attachments/` next to it.
+It writes the file itself, so Obsidian does not need to be running. Each thought is an Obsidian
+callout, and a small CSS snippet turns it into a colored card. Clicking a thought in the
+recent-captures bubble opens it in Obsidian.
+</details>
+
+<details>
+<summary><b>Can I save to Apple Notes instead?</b></summary>
+
+Yes. Choose Apple Notes on first launch or in Settings. Thoughts are appended to one note per day,
+`Thoughts — YYYY-MM-DD`, and macOS asks for permission to let Eureka control Notes. Screenshots are
+kept in `~/Pictures/Eureka/` and the note gets the file path, because Notes drops earlier images
+when a note is changed through automation.
+</details>
+
+<details>
+<summary><b>What about Logseq, or another Markdown app?</b></summary>
+
+In Settings you can point Eureka at any folder, not only an Obsidian vault, and it writes the same
+plain Markdown files there, so any app that reads a folder of `.md` files can open them. Two things
+are Obsidian-only: the colored cards (elsewhere a thought shows as a quote whose first line is
+`[!thought-coral] 11:03`) and jumping to a thought from the recent-captures bubble. There is no
+integration with Notion, Bear or other apps that keep notes in a database.
+</details>
+
+<details>
+<summary><b>Which apps does it capture the selection and source URL from?</b></summary>
+
+The selected text comes from any app that exposes it through macOS Accessibility; when an app does
+not (some Electron apps), Eureka sends a ⌘C and restores your clipboard right after. The page URL is
+read from Safari, Chrome, Edge, Brave and Arc. In every other app, including Firefox, the source is
+the app name.
+</details>
+
+<details>
+<summary><b>Does it send my notes anywhere?</b></summary>
+
+No. Thoughts and screenshots are written only to your vault folder or to Apple Notes. Eureka has no
+analytics and makes no network requests of its own. The only requests go to the AI endpoint you
+configure, and only when you use it: a <kbd>/</kbd> question sends the question and the selected
+text. See [Privacy](#privacy).
+</details>
+
+<details>
+<summary><b>Can I use a local model, like Ollama?</b></summary>
+
+Yes. Set the API base URL to `http://localhost:11434/v1`, pick a model such as `llama3.2`, and leave
+the API key empty; nothing leaves your Mac. Any OpenAI-compatible API works the same way, including
+DeepSeek and OpenAI ([setup](#ask-ai-setup)).
+</details>
+
+<details>
+<summary><b>Which Macs does it run on?</b></summary>
+
+macOS 12 Monterey or later, on Apple Silicon and Intel: the release is a universal binary. It needs
+the Accessibility permission to read your selection. Releases are not notarized yet, so remove the
+quarantine flag after downloading (the install script does this for you).
+</details>
+
+<details>
+<summary><b>How is it different from Apple Quick Note, Raycast or Drafts?</b></summary>
+
+Those open a notes window, and the note lives in their app. Eureka opens a one-line input at your
+cursor, attaches the text you selected and where it came from without being asked, and writes into
+your Obsidian vault or Apple Notes, then gets out of the way. It does one thing; if you want a full
+writing app or a launcher, those tools do much more.
+</details>
+
+<details>
+<summary><b>Is this the same as Netflix Eureka, or the other projects named Eureka?</b></summary>
+
+No. This Eureka (repository <code>Claire1217/Eureka</code>) is a macOS menu bar app for capturing
+thoughts into Obsidian or Apple Notes. It is unrelated to Netflix Eureka, the service registry used
+with Spring Cloud, to the Eureka form library for iOS, to the Eureka Math curriculum, and to other
+apps and repositories with the same name. To find this one, search for <code>Claire1217/Eureka</code>
+or <code>Eureka macOS Obsidian</code>.
+</details>
 
 ## License
 
