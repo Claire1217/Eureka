@@ -1,0 +1,87 @@
+name: Pages
+
+# Publishes site/ to https://claire1217.github.io/Eureka/
+# Needs Settings → Pages → Source: GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "assets/**"
+      - "llms.txt"
+      - "README*"
+      - "VERSION"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          LASTMOD="$(git log -1 --format=%cs)"
+
+          rm -rf _site
+          mkdir -p _site/assets
+          cp -R site/. _site/
+          cp assets/*.svg assets/*.png _site/assets/
+          cp llms.txt _site/llms.txt
+
+          # Keep the version on the page and in the JSON-LD in step with VERSION
+          sed -i -E \
+            -e "s/\"softwareVersion\": \"[^\"]*\"/\"softwareVersion\": \"$VERSION\"/" \
+            -e "s|<span class=\"ver\">[^<]*</span>|<span class=\"ver\">$VERSION</span>|" \
+            _site/index.html
+          sed -i -E "s|<lastmod>[^<]*</lastmod>|<lastmod>$LASTMOD</lastmod>|" _site/sitemap.xml
+          grep -q "\"softwareVersion\": \"$VERSION\"" _site/index.html
+          grep -q "<span class=\"ver\">$VERSION</span>" _site/index.html
+
+          # The JSON-LD must still parse
+          python3 - _site/index.html <<'PY'
+          import json, re, sys
+          html = open(sys.argv[1], encoding="utf-8").read()
+          blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+          assert blocks, "no JSON-LD found"
+          for block in blocks:
+              json.loads(block)
+          PY
+
+          # Every local file the page points to must be in the site
+          grep -oE '(src|href|srcset)="[^"#:]+"' _site/index.html \
+            | sed -E 's/^[a-z]+="//; s/"$//' | sort -u \
+            | while read -r f; do
+                test -e "_site/$f" || { echo "ERROR: missing $f" >&2; exit 1; }
+              done
+          ls -la _site _site/assets
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
