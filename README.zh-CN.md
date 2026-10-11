@@ -9,15 +9,16 @@
 
 **按下快捷键，写一句话，完事。**
 
-一个很小的 macOS 菜单栏工具：随手记下一个想法，连同你当时选中的文字、<br>
-所在的网页或一张截图，直接写进 Obsidian 或 Apple 备忘录。
+Eureka 是一个免费、开源的 macOS 菜单栏快速记录工具：在任意应用里按 ⌥T，<br>
+就能把一句想法连同选中的文字和它的来源（网页地址或应用名）存进 Obsidian 或 Apple 备忘录。<br>
+⌥R 用同样的方式保存一张截图。
 
 [![Release](https://img.shields.io/github/v/release/Claire1217/Eureka)](https://github.com/Claire1217/Eureka/releases)
 [![Build](https://github.com/Claire1217/Eureka/actions/workflows/build.yml/badge.svg)](https://github.com/Claire1217/Eureka/actions/workflows/build.yml)
 [![macOS 12+](https://img.shields.io/badge/macOS-12%2B-black)](#安装)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[**下载**](https://github.com/Claire1217/Eureka/releases) · [安装](#安装) · [配置 AI 快问](#配置-ai-快问) · [English](README.md)
+[**下载**](https://github.com/Claire1217/Eureka/releases) · [安装](#安装) · [配置 AI 快问](#配置-ai-快问) · [常见问题](#常见问题) · [English](README.md)
 
 </div>
 
@@ -223,6 +224,90 @@ README 里的动画是脚本生成的：`python3 assets/make_hero.py` 和
 - 部分 Electron 应用不暴露选中文字，Eureka 在这些应用里会退回到 ⌘C 的方式。在「无选区时复制整行」的编辑器（如 VS Code）里，这一行可能被当成上下文带上。
 - 来源网址只支持上面列出的浏览器（Firefox 没有脚本接口）。
 - 界面目前只有浅色模式。
+
+## 常见问题
+
+<!-- 同样的问答也在 site/index.html（英文 FAQ 和 FAQPage JSON-LD）里，改动时请保持一致。 -->
+
+<details open>
+<summary><b>Eureka 免费吗？开源吗？</b></summary>
+
+免费，开源，MIT 许可。没有账号、没有付费版，也没有自己的服务器。唯一可能的花费是你为 <kbd>/</kbd>
+提问选的 AI 服务，由服务商按你的账号计费；通过 Ollama 跑本地模型不花钱，而记录想法本身完全不需要 AI。
+</details>
+
+<details>
+<summary><b>支持 Obsidian 吗？Obsidian 需要开着吗？</b></summary>
+
+支持，Obsidian 是默认选项。Eureka 直接把纯 Markdown 写进你的 vault：每天一个文件，默认位置是
+`Eureka/YYYY-MM-DD/Thoughts.md`，截图放在旁边的 `attachments/` 里。文件由 Eureka 自己写入，
+所以 Obsidian 不用开着。每个想法是一个 Obsidian callout，配一个小 CSS 片段显示成彩色卡片。
+在最近记录气泡里点一条，会在 Obsidian 里打开它。
+</details>
+
+<details>
+<summary><b>可以存到 Apple 备忘录吗？</b></summary>
+
+可以。首次启动时或在设置里选 Apple 备忘录即可。想法会追加到每天一篇、名为 `Thoughts — YYYY-MM-DD`
+的笔记里，macOS 会请求允许 Eureka 控制备忘录。截图存在 `~/Pictures/Eureka/`，笔记里记录文件路径，
+因为通过自动化修改笔记时，备忘录会丢掉之前的图片。
+</details>
+
+<details>
+<summary><b>Logseq 或其他 Markdown 工具能用吗？</b></summary>
+
+在设置里可以选任意文件夹，不一定是 Obsidian vault，Eureka 会往里面写同样的纯 Markdown 文件，
+所以能读一个文件夹里 `.md` 文件的应用都能打开。有两点只在 Obsidian 里有：彩色卡片（在别处，一个想法
+显示为引用，第一行是 `[!thought-coral] 11:03`），以及从最近记录气泡跳转到对应的想法。
+Notion、Bear 等把笔记存在数据库里的应用没有集成。
+</details>
+
+<details>
+<summary><b>能从哪些应用里读取选中文字和来源网址？</b></summary>
+
+选中文字来自任何通过 macOS 辅助功能暴露选区的应用；不暴露的应用（部分 Electron 应用）里，
+Eureka 会发一次 ⌘C，随后立刻还原你的剪贴板。网页地址支持 Safari、Chrome、Edge、Brave 和 Arc。
+其他应用（包括 Firefox）里，来源记为应用名。
+</details>
+
+<details>
+<summary><b>我的笔记会被发到别处吗？</b></summary>
+
+不会。想法和截图只写进你的 vault 文件夹或 Apple 备忘录。Eureka 没有统计，自己不发任何网络请求。
+唯一的请求发往你配置的 AI 接口，而且只在你使用时发送：用 <kbd>/</kbd> 提问会发送问题和选中文字。
+详见[隐私](#隐私)。
+</details>
+
+<details>
+<summary><b>能用 Ollama 这样的本地模型吗？</b></summary>
+
+能。API Base URL 填 `http://localhost:11434/v1`，选一个模型（比如 `llama3.2`），API key 留空，
+数据不出你的 Mac。其他 OpenAI 兼容的接口用法一样，包括 DeepSeek 和 OpenAI（[配置方法](#配置-ai-快问)）。
+</details>
+
+<details>
+<summary><b>支持哪些 Mac？</b></summary>
+
+macOS 12 Monterey 或更高版本，Apple Silicon 和 Intel 都行：发布包是 universal 二进制。读取选中文字
+需要辅助功能权限。发布包尚未公证，下载后要去掉隔离标记（安装脚本会替你做）。
+</details>
+
+<details>
+<summary><b>和 Apple 快速备忘录、Raycast、Drafts 有什么不同？</b></summary>
+
+它们会打开一个笔记窗口，笔记存在它们自己的应用里。Eureka 在光标旁弹出一行输入框，自动带上你选中的文字
+和它的来源，写进你的 Obsidian vault 或 Apple 备忘录，然后就消失。它只做这一件事；想要完整的写作应用
+或启动器，那些工具能做的多得多。
+</details>
+
+<details>
+<summary><b>和 Netflix Eureka 或其他叫 Eureka 的项目是一回事吗？</b></summary>
+
+不是。这个 Eureka（仓库 <code>Claire1217/Eureka</code>）是一个把想法记进 Obsidian 或 Apple 备忘录的
+macOS 菜单栏工具，和 Netflix Eureka（Spring Cloud 里的服务注册中心）、iOS 表单库 Eureka、Eureka Math
+数学课程，以及其他同名的应用和仓库都没有关系。想找到这个项目，可以搜 <code>Claire1217/Eureka</code>
+或「Eureka macOS Obsidian」。
+</details>
 
 ## 许可
 
