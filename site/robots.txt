@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://claire1217.github.io/Eureka/sitemap.xml
